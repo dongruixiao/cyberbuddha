@@ -18,9 +18,25 @@ load_dotenv()
 ADDRESS = os.getenv("ADDRESS", "0x0000000000000000000000000000000000000000")
 NETWORK = os.getenv("NETWORK", "base-sepolia")
 FACILITATOR_URL = os.getenv("FACILITATOR_URL", "https://x402.org/facilitator")
+CDP_API_KEY_ID = os.getenv("CDP_API_KEY_ID", "")
+CDP_API_KEY_SECRET = os.getenv("CDP_API_KEY_SECRET", "")
 
 # Facilitator 配置
-FACILITATOR_CONFIG = {"url": FACILITATOR_URL}
+async def create_cdp_headers():
+    """为 CDP Facilitator 创建认证头"""
+    if CDP_API_KEY_ID and CDP_API_KEY_SECRET:
+        import base64
+        credentials = base64.b64encode(f"{CDP_API_KEY_ID}:{CDP_API_KEY_SECRET}".encode()).decode()
+        return {
+            "verify": {"Authorization": f"Basic {credentials}"},
+            "settle": {"Authorization": f"Basic {credentials}"},
+        }
+    return {}
+
+FACILITATOR_CONFIG = {
+    "url": FACILITATOR_URL,
+    "create_headers": create_cdp_headers if CDP_API_KEY_ID else None,
+}
 
 app = FastAPI(
     title="Cyber Buddha x402",

@@ -19,6 +19,9 @@ ADDRESS = os.getenv("ADDRESS", "0x0000000000000000000000000000000000000000")
 NETWORK = os.getenv("NETWORK", "base-sepolia")
 FACILITATOR_URL = os.getenv("FACILITATOR_URL", "https://x402.org/facilitator")
 
+# Facilitator 配置
+FACILITATOR_CONFIG = {"url": FACILITATOR_URL}
+
 app = FastAPI(
     title="Cyber Buddha x402",
     description="赛博佛祖 - 链上上香许愿",
@@ -43,6 +46,7 @@ app.middleware("http")(
         price="$0.10",
         pay_to_address=ADDRESS,
         network=NETWORK,
+        facilitator_config=FACILITATOR_CONFIG,
     )
 )
 
@@ -53,6 +57,7 @@ app.middleware("http")(
         price="$1.00",
         pay_to_address=ADDRESS,
         network=NETWORK,
+        facilitator_config=FACILITATOR_CONFIG,
     )
 )
 
@@ -63,6 +68,7 @@ app.middleware("http")(
         price="$5.00",
         pay_to_address=ADDRESS,
         network=NETWORK,
+        facilitator_config=FACILITATOR_CONFIG,
     )
 )
 
@@ -73,6 +79,7 @@ app.middleware("http")(
         price="$10.00",
         pay_to_address=ADDRESS,
         network=NETWORK,
+        facilitator_config=FACILITATOR_CONFIG,
     )
 )
 

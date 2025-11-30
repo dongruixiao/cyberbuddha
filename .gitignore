@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# Environment
+.env
+!.env.example
+
+# Lock files (optional, can keep for reproducibility)
+# uv.lock
+
+# OS
+.DS_Store

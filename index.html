@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Buddha - x402</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0a0a0a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', monospace;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+        }
+        .buddha {
+            color: #00ff88;
+            font-size: 12px;
+            line-height: 1.2;
+            white-space: pre;
+            text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88;
+            animation: glow 2s ease-in-out infinite alternate;
+            font-family: monospace;
+            display: inline-block;
+            text-align: left;
+        }
+        .title {
+            color: #00ff88;
+            font-size: 12px;
+            margin-top: 20px;
+            letter-spacing: 8px;
+            text-shadow: 0 0 10px #00ff88;
+        }
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88; opacity: 0.8; }
+            to { text-shadow: 0 0 20px #00ff88, 0 0 40px #00ff88, 0 0 60px #00ff88; opacity: 1; }
+        }
+
+        /* 上香区域 */
+        .offering-section {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid #00ff8844;
+            border-radius: 8px;
+            background: #0a0a0a99;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .offering-title {
+            color: #00ff88;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px #00ff88;
+        }
+        .x402-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: linear-gradient(90deg, #7c3aed, #2563eb);
+            border-radius: 4px;
+            font-size: 10px;
+            color: white;
+            margin-left: 8px;
+        }
+
+        /* 香的容器 */
+        .incense-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            min-height: 60px;
+        }
+        .incense {
+            width: 4px;
+            height: 50px;
+            background: linear-gradient(to top, #ff6600, #ffaa00);
+            border-radius: 2px;
+            position: relative;
+            animation: incenseBurn 3s ease-in-out infinite;
+        }
+        .incense::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 15px;
+            background: #ff4400;
+            border-radius: 50% 50% 20% 20%;
+            animation: flame 0.5s ease-in-out infinite alternate;
+            box-shadow: 0 0 10px #ff6600, 0 0 20px #ff4400;
+        }
+        .incense::after {
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 20px;
+            background: linear-gradient(to top, #888, transparent);
+            animation: smoke 2s ease-out infinite;
+            opacity: 0.6;
+        }
+        @keyframes incenseBurn { 0%, 100% { height: 50px; } 50% { height: 48px; } }
+        @keyframes flame { from { transform: translateX(-50%) scale(1); } to { transform: translateX(-50%) scale(1.2); } }
+        @keyframes smoke { 0% { opacity: 0.6; top: -30px; } 100% { opacity: 0; top: -60px; } }
+
+        /* 钱包信息 */
+        .wallet-info {
+            color: #00ff8888;
+            font-size: 10px;
+            margin-bottom: 5px;
+        }
+        .network-info {
+            color: #ffaa00aa;
+            font-size: 10px;
+            margin-bottom: 15px;
+        }
+
+        /* 输入框 */
+        .input-field {
+            width: 100%;
+            padding: 10px;
+            background: #111;
+            border: 1px solid #00ff8844;
+            border-radius: 4px;
+            color: #00ff88;
+            font-family: monospace;
+            font-size: 12px;
+            margin-bottom: 15px;
+            outline: none;
+        }
+        .input-field:focus {
+            border-color: #00ff88;
+            box-shadow: 0 0 10px #00ff8833;
+        }
+        .input-field::placeholder { color: #00ff8866; }
+
+        /* 香的选择 */
+        .offering-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .offering-btn {
+            padding: 12px 8px;
+            background: transparent;
+            border: 1px solid #00ff8866;
+            border-radius: 4px;
+            color: #00ff88;
+            font-family: monospace;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .offering-btn:hover, .offering-btn.selected {
+            background: #00ff8822;
+            border-color: #00ff88;
+            box-shadow: 0 0 15px #00ff8844;
+        }
+        .offering-btn .price {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 4px;
+            color: #ffaa00;
+        }
+
+        /* 按钮 */
+        .btn {
+            padding: 12px 24px;
+            background: transparent;
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            font-family: monospace;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #00ff8822;
+            box-shadow: 0 0 15px #00ff8844;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-connect {
+            border-color: #ffaa00;
+            color: #ffaa00;
+        }
+        .btn-connect:hover {
+            background: #ffaa0022;
+            box-shadow: 0 0 15px #ffaa0044;
+        }
+        .btn-offer {
+            width: 100%;
+            margin-top: 10px;
+            padding: 15px;
+            font-size: 14px;
+        }
+
+        /* 状态 */
+        .status {
+            color: #00ff8888;
+            font-size: 11px;
+            margin-top: 15px;
+            min-height: 20px;
+        }
+        .status.error { color: #ff4444; }
+        .status.success { color: #00ff88; }
+        .status a { color: #00ff88; }
+
+        /* 祝福动画 */
+        .blessing-animation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ffaa00;
+            font-size: 24px;
+            text-shadow: 0 0 20px #ffaa00, 0 0 40px #ff6600;
+            animation: blessingPop 2s ease-out forwards;
+            pointer-events: none;
+            z-index: 1000;
+            white-space: nowrap;
+        }
+        @keyframes blessingPop {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            80% { opacity: 1; transform: translate(-50%, -60%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -70%) scale(0.8); }
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #00ff8844;
+            border-top-color: #00ff88;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+<pre class="buddha">                  _oo0oo_
+                 o8888888o
+                 88" . "88
+                 (| -_- |)
+                 0\  =  /0
+               ___/`---'\___
+             .' \\|     |// '.
+            / \\|||  :  |||// \
+           / _||||| -:- |||||- \
+          |   | \\\  -  /// |   |
+          | \_|  ''\---/''  |_/ |
+          \  .-\__  '-'  ___/-. /
+        ___'. .'  /--.--\  `. .'___
+     ."" '<  `.___\_<|>_/___.' >' "".
+    | | :  `- \`.;`\ _ /`;.`/ - ` : | |
+    \  \ `_.   \_ __\ /__ _/   .-` /  /
+=====`-.____`.___ \_____/___.-`___.-'=====
+                  `=---='
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          佛祖保佑         永無BUG
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</pre>
+        <div class="title">C Y B E R _ B U D D H A <span class="x402-badge">x402</span></div>
+
+        <div class="offering-section">
+            <div class="offering-title">~ 赛博上香 · 链上许愿 ~</div>
+
+            <div class="incense-container" id="incenseContainer"></div>
+
+            <div class="wallet-info" id="walletInfo">未连接钱包</div>
+            <div class="network-info" id="networkInfo"></div>
+
+            <input type="text" class="input-field" id="wishInput" placeholder="输入你的愿望..." maxlength="100">
+
+            <div class="offering-options" id="offeringOptions">
+                <button class="offering-btn" data-type="small">
+                    小香<span class="price">$0.10</span>
+                </button>
+                <button class="offering-btn selected" data-type="medium">
+                    中香<span class="price">$1.00</span>
+                </button>
+                <button class="offering-btn" data-type="large">
+                    大香<span class="price">$5.00</span>
+                </button>
+                <button class="offering-btn" data-type="premium">
+                    高香<span class="price">$10.00</span>
+                </button>
+            </div>
+
+            <button class="btn btn-connect" id="connectBtn">连接钱包</button>
+            <button class="btn btn-offer" id="offerBtn" disabled>🙏 上香许愿</button>
+
+            <div class="status" id="status"></div>
+        </div>
+    </div>
+
+    <script>
+        // API 基础路径
+        const API_BASE = '';
+
+        // x402 配置
+        let selectedOffering = 'medium';
+        let userAddress = null;
+        let currentChainId = null;
+        let serverConfig = null;
+
+        // DOM
+        const connectBtn = document.getElementById('connectBtn');
+        const offerBtn = document.getElementById('offerBtn');
+        const wishInput = document.getElementById('wishInput');
+        const status = document.getElementById('status');
+        const walletInfo = document.getElementById('walletInfo');
+        const networkInfo = document.getElementById('networkInfo');
+        const incenseContainer = document.getElementById('incenseContainer');
+        const offeringBtns = document.querySelectorAll('.offering-btn');
+
+        // 获取服务端配置
+        async function fetchConfig() {
+            try {
+                const res = await fetch(`${API_BASE}/api/config`);
+                serverConfig = await res.json();
+                networkInfo.textContent = `网络: ${serverConfig.network}`;
+            } catch (e) {
+                console.error('获取配置失败:', e);
+            }
+        }
+
+        // 选择香的类型
+        offeringBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                offeringBtns.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedOffering = btn.dataset.type;
+            });
+        });
+
+        // 连接钱包
+        connectBtn.addEventListener('click', async () => {
+            if (!window.ethereum) {
+                setStatus('请安装 MetaMask 或其他 Web3 钱包', 'error');
+                return;
+            }
+
+            try {
+                setStatus('<span class="loading"></span>正在连接钱包...');
+
+                const accounts = await window.ethereum.request({
+                    method: 'eth_requestAccounts'
+                });
+                userAddress = accounts[0];
+
+                const chainIdHex = await window.ethereum.request({ method: 'eth_chainId' });
+                currentChainId = parseInt(chainIdHex, 16);
+
+                updateWalletUI();
+                setStatus('钱包连接成功！', 'success');
+
+            } catch (error) {
+                console.error(error);
+                setStatus('连接失败: ' + error.message, 'error');
+            }
+        });
+
+        function updateWalletUI() {
+            if (userAddress) {
+                const shortAddr = userAddress.slice(0, 6) + '...' + userAddress.slice(-4);
+                walletInfo.textContent = `已连接: ${shortAddr}`;
+                connectBtn.textContent = '已连接';
+                connectBtn.disabled = true;
+                offerBtn.disabled = false;
+            }
+        }
+
+        // 网络配置
+        const NETWORK_CONFIG = {
+            'base-sepolia': { chainId: 84532, name: 'Base Sepolia', rpc: 'https://sepolia.base.org' },
+            'base': { chainId: 8453, name: 'Base', rpc: 'https://mainnet.base.org' },
+        };
+
+        // 切换网络
+        async function switchToNetwork(networkName) {
+            const config = NETWORK_CONFIG[networkName];
+            if (!config) return false;
+
+            const chainIdHex = '0x' + config.chainId.toString(16);
+
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: chainIdHex }],
+                });
+                currentChainId = config.chainId;
+                return true;
+            } catch (switchError) {
+                if (switchError.code === 4902) {
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [{
+                                chainId: chainIdHex,
+                                chainName: config.name,
+                                rpcUrls: [config.rpc],
+                                nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 }
+                            }],
+                        });
+                        currentChainId = config.chainId;
+                        return true;
+                    } catch (e) {
+                        console.error('添加网络失败:', e);
+                        return false;
+                    }
+                }
+                return false;
+            }
+        }
+
+        // 上香 - x402 流程
+        offerBtn.addEventListener('click', async () => {
+            if (!userAddress) {
+                setStatus('请先连接钱包', 'error');
+                return;
+            }
+
+            const wish = wishInput.value.trim() || '心诚则灵';
+            const offering = serverConfig?.offerings?.find(o => o.id === selectedOffering);
+            if (!offering) {
+                setStatus('请选择香的类型', 'error');
+                return;
+            }
+
+            try {
+                setStatus('<span class="loading"></span>正在请求支付...');
+                offerBtn.disabled = true;
+
+                // Step 1: 发起请求，获取 402 响应
+                const response = await fetch(`${API_BASE}${offering.path}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ wish })
+                });
+
+                // 如果不是 402，说明不需要支付（不太可能）
+                if (response.status !== 402) {
+                    const data = await response.json();
+                    handleSuccess(data, wish);
+                    return;
+                }
+
+                // Step 2: 解析 402 响应，获取支付要求
+                const paymentRequired = await response.json();
+                console.log('Payment Required:', paymentRequired);
+
+                if (!paymentRequired.accepts || paymentRequired.accepts.length === 0) {
+                    setStatus('无法获取支付要求', 'error');
+                    offerBtn.disabled = false;
+                    return;
+                }
+
+                const requirements = paymentRequired.accepts[0];
+
+                // 检查并切换网络
+                const targetNetwork = requirements.network;
+                const targetConfig = NETWORK_CONFIG[targetNetwork];
+                if (targetConfig && currentChainId !== targetConfig.chainId) {
+                    setStatus('<span class="loading"></span>正在切换到 ' + targetConfig.name + '...');
+                    const switched = await switchToNetwork(targetNetwork);
+                    if (!switched) {
+                        setStatus('请手动切换到 ' + targetConfig.name + ' 网络', 'error');
+                        offerBtn.disabled = false;
+                        return;
+                    }
+                }
+
+                setStatus('<span class="loading"></span>请在钱包中签名授权...');
+
+                // Step 3: 创建 EIP-3009 授权签名
+                const payment = await createPaymentAuthorization(requirements);
+
+                // Step 4: 带上 X-PAYMENT header 重新请求
+                setStatus('<span class="loading"></span>正在处理支付...');
+                const paymentResponse = await fetch(`${API_BASE}${offering.path}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-PAYMENT': payment
+                    },
+                    body: JSON.stringify({ wish })
+                });
+
+                if (!paymentResponse.ok) {
+                    const err = await paymentResponse.json();
+                    throw new Error(err.error || '支付失败');
+                }
+
+                const result = await paymentResponse.json();
+
+                // 获取交易信息
+                const xPaymentResponse = paymentResponse.headers.get('X-PAYMENT-RESPONSE');
+                if (xPaymentResponse) {
+                    try {
+                        const txInfo = JSON.parse(atob(xPaymentResponse));
+                        console.log('Transaction:', txInfo);
+                    } catch (e) {}
+                }
+
+                handleSuccess(result, wish);
+
+            } catch (error) {
+                console.error(error);
+                if (error.code === 4001) {
+                    setStatus('用户取消了签名', 'error');
+                } else {
+                    setStatus('支付失败: ' + error.message, 'error');
+                }
+            } finally {
+                offerBtn.disabled = false;
+            }
+        });
+
+        // 创建 EIP-3009 支付授权
+        async function createPaymentAuthorization(requirements) {
+            const { asset, payTo, maxAmountRequired, extra, network } = requirements;
+
+            // 生成随机 nonce (bytes32)
+            const nonceBytes = crypto.getRandomValues(new Uint8Array(32));
+            const nonce = '0x' + [...nonceBytes].map(b => b.toString(16).padStart(2, '0')).join('');
+
+            const now = Math.floor(Date.now() / 1000);
+            const validAfter = 0;  // 立即生效
+            const validBefore = now + 3600;  // 1小时后过期
+
+            // 获取正确的 chainId
+            const targetConfig = NETWORK_CONFIG[network];
+            const chainId = targetConfig ? targetConfig.chainId : currentChainId;
+
+            // EIP-712 Domain
+            const domain = {
+                name: extra?.name || 'USDC',
+                version: extra?.version || '2',
+                chainId: chainId,
+                verifyingContract: asset
+            };
+
+            // EIP-712 类型
+            const types = {
+                TransferWithAuthorization: [
+                    { name: 'from', type: 'address' },
+                    { name: 'to', type: 'address' },
+                    { name: 'value', type: 'uint256' },
+                    { name: 'validAfter', type: 'uint256' },
+                    { name: 'validBefore', type: 'uint256' },
+                    { name: 'nonce', type: 'bytes32' }
+                ]
+            };
+
+            // 签名消息
+            const message = {
+                from: userAddress,
+                to: payTo,
+                value: maxAmountRequired,
+                validAfter: validAfter,
+                validBefore: validBefore,
+                nonce: nonce
+            };
+
+            console.log('Signing EIP-712 message:', { domain, message });
+
+            // 请求签名
+            const signature = await window.ethereum.request({
+                method: 'eth_signTypedData_v4',
+                params: [userAddress, JSON.stringify({
+                    types: {
+                        EIP712Domain: [
+                            { name: 'name', type: 'string' },
+                            { name: 'version', type: 'string' },
+                            { name: 'chainId', type: 'uint256' },
+                            { name: 'verifyingContract', type: 'address' }
+                        ],
+                        ...types
+                    },
+                    primaryType: 'TransferWithAuthorization',
+                    domain,
+                    message
+                })]
+            });
+
+            console.log('Signature:', signature);
+
+            // 构造 x402 payment payload
+            const payload = {
+                x402Version: 1,
+                scheme: 'exact',
+                network: network,
+                payload: {
+                    signature: signature,
+                    authorization: {
+                        from: userAddress,
+                        to: payTo,
+                        value: maxAmountRequired,
+                        validAfter: validAfter.toString(),
+                        validBefore: validBefore.toString(),
+                        nonce: nonce
+                    }
+                }
+            };
+
+            console.log('Payment payload:', payload);
+
+            // Base64 编码
+            return btoa(JSON.stringify(payload));
+        }
+
+        // 处理成功
+        function handleSuccess(result, wish) {
+            addIncense();
+            showBlessing(result.blessing || wish);
+            wishInput.value = '';
+            setStatus(`${result.message || '上香成功！'} 🙏`, 'success');
+        }
+
+        function addIncense() {
+            const incense = document.createElement('div');
+            incense.className = 'incense';
+            incenseContainer.appendChild(incense);
+            if (incenseContainer.children.length > 10) {
+                incenseContainer.removeChild(incenseContainer.firstChild);
+            }
+        }
+
+        function showBlessing(text) {
+            const blessing = document.createElement('div');
+            blessing.className = 'blessing-animation';
+            blessing.textContent = text;
+            document.body.appendChild(blessing);
+            setTimeout(() => blessing.remove(), 2000);
+        }
+
+        function setStatus(message, type = '') {
+            status.innerHTML = message;
+            status.className = 'status ' + type;
+        }
+
+        // 监听钱包事件
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    userAddress = null;
+                    walletInfo.textContent = '未连接钱包';
+                    connectBtn.textContent = '连接钱包';
+                    connectBtn.disabled = false;
+                    offerBtn.disabled = true;
+                } else {
+                    userAddress = accounts[0];
+                    updateWalletUI();
+                }
+            });
+
+            window.ethereum.on('chainChanged', (chainIdHex) => {
+                currentChainId = parseInt(chainIdHex, 16);
+            });
+        }
+
+        // 初始化
+        fetchConfig();
+    </script>
+</body>
+</html>

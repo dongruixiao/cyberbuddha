@@ -269,6 +269,10 @@
     // Cyber Buddha - x402 Client
     // ============================================================
 
+    // Import viem for proper EIP-712 handling
+    import { createWalletClient, custom, getAddress } from 'https://esm.sh/viem@2.21.0';
+    import { baseSepolia } from 'https://esm.sh/viem@2.21.0/chains';
+
     const NETWORK_CONFIG = {
       'base': { chainId: 8453, name: 'Base' },
       'base-sepolia': { chainId: 84532, name: 'Base Sepolia' },
@@ -355,6 +359,7 @@
       if (!window.ethereum) throw new Error('请安装 MetaMask');
 
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      // MetaMask returns checksummed addresses
       state.address = accounts[0];
       state.chainId = parseInt(await window.ethereum.request({ method: 'eth_chainId' }), 16);
 
@@ -381,13 +386,14 @@
     async function createPaymentAuth(requirements) {
       const { asset, payTo, maxAmountRequired, extra, network } = requirements;
 
-      // Generate nonce
+      // Generate nonce (32 bytes hex)
       const nonce = '0x' + [...crypto.getRandomValues(new Uint8Array(32))]
         .map(b => b.toString(16).padStart(2, '0')).join('');
 
+      // validAfter: 10 minutes ago, validBefore: maxTimeoutSeconds from now
       const now = Math.floor(Date.now() / 1000);
-      const validAfter = 0;
-      const validBefore = now + 3600;
+      const validAfter = BigInt(now - 600);
+      const validBefore = BigInt(now + (requirements.maxTimeoutSeconds || 3600));
 
       const targetConfig = NETWORK_CONFIG[network];
       const chainId = targetConfig?.chainId || state.chainId;
@@ -398,12 +404,23 @@
         state.chainId = chainId;
       }
 
-      // EIP-712 Domain
+      // Create viem wallet client
+      const walletClient = createWalletClient({
+        chain: { id: chainId, name: network },
+        transport: custom(window.ethereum),
+      });
+
+      // Get checksummed addresses
+      const fromAddress = getAddress(state.address);
+      const toAddress = getAddress(payTo);
+      const assetAddress = getAddress(asset);
+
+      // EIP-712 Domain (matching x402 exactly)
       const domain = {
         name: extra?.name || 'USDC',
         version: extra?.version || '2',
         chainId,
-        verifyingContract: asset,
+        verifyingContract: assetAddress,
       };
 
       // EIP-712 Types
@@ -418,19 +435,23 @@
         ],
       };
 
+      // EIP-712 Message (using BigInt for uint256)
       const message = {
-        from: state.address,
-        to: payTo,
-        value: maxAmountRequired,
+        from: fromAddress,
+        to: toAddress,
+        value: BigInt(maxAmountRequired),
         validAfter,
         validBefore,
         nonce,
       };
 
-      // Sign
-      const sig = await window.ethereum.request({
-        method: 'eth_signTypedData_v4',
-        params: [state.address, JSON.stringify({ types, domain, primaryType: 'TransferWithAuthorization', message })],
+      // Sign using viem (matches x402 client exactly)
+      const signature = await walletClient.signTypedData({
+        account: fromAddress,
+        domain,
+        types,
+        primaryType: 'TransferWithAuthorization',
+        message,
       });
 
       return {
@@ -438,13 +459,13 @@
         scheme: 'exact',
         network,
         payload: {
-          signature: sig,
+          signature,
           authorization: {
-            from: state.address,
-            to: payTo,
+            from: fromAddress,
+            to: toAddress,
             value: maxAmountRequired,
-            validAfter: `0x${validAfter.toString(16)}`,
-            validBefore: `0x${validBefore.toString(16)}`,
+            validAfter: validAfter.toString(),
+            validBefore: validBefore.toString(),
             nonce,
           },
         },

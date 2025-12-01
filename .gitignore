@@ -4,12 +4,20 @@ __pycache__/
 .venv/
 *.egg-info/
 
+# Node.js
+node_modules/
+dist/
+.wrangler/
+
 # Environment
 .env
+.env.local
+.dev.vars
 !.env.example
 
 # Lock files (optional, can keep for reproducibility)
 # uv.lock
+# package-lock.json
 
 # OS
 .DS_Store

@@ -1,0 +1,10 @@
+name = "cyberbuddha"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+[vars]
+NETWORK = "base-sepolia"
+
+# Static assets
+[assets]
+directory = "./public"

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyber Buddha - x402</title>
+  <style>
+    :root {
+      --neon: #00ff88;
+      --neon-dim: #00ff8866;
+      --gold: #ffaa00;
+      --bg: #0a0a0a;
+      --flame: #ff6600;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Courier New', monospace;
+      color: var(--neon);
+    }
+
+    .container { text-align: center; padding: 20px; }
+
+    .buddha {
+      font-size: 12px;
+      line-height: 1.2;
+      white-space: pre;
+      text-shadow: 0 0 10px var(--neon), 0 0 20px var(--neon);
+      animation: glow 2s ease-in-out infinite alternate;
+      display: inline-block;
+      text-align: left;
+    }
+
+    .title {
+      font-size: 12px;
+      margin-top: 20px;
+      letter-spacing: 8px;
+      text-shadow: 0 0 10px var(--neon);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      background: linear-gradient(90deg, #7c3aed, #2563eb);
+      border-radius: 4px;
+      font-size: 10px;
+      color: white;
+      margin-left: 8px;
+    }
+
+    @keyframes glow {
+      from { text-shadow: 0 0 10px var(--neon), 0 0 20px var(--neon); opacity: 0.8; }
+      to { text-shadow: 0 0 20px var(--neon), 0 0 40px var(--neon), 0 0 60px var(--neon); opacity: 1; }
+    }
+
+    /* Offering Section */
+    .section {
+      margin-top: 30px;
+      padding: 20px;
+      border: 1px solid var(--neon-dim);
+      border-radius: 8px;
+      background: rgba(10, 10, 10, 0.6);
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .section-title {
+      font-size: 14px;
+      margin-bottom: 15px;
+      text-shadow: 0 0 10px var(--neon);
+    }
+
+    /* Incense Animation */
+    .incense-wrap { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; min-height: 60px; }
+
+    .incense {
+      width: 4px;
+      height: 50px;
+      background: linear-gradient(to top, var(--flame), var(--gold));
+      border-radius: 2px;
+      position: relative;
+      animation: burn 3s ease-in-out infinite;
+    }
+
+    .incense::before {
+      content: '';
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 8px;
+      height: 15px;
+      background: #ff4400;
+      border-radius: 50% 50% 20% 20%;
+      animation: flame 0.5s ease-in-out infinite alternate;
+      box-shadow: 0 0 10px var(--flame), 0 0 20px #ff4400;
+    }
+
+    .incense::after {
+      content: '';
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 20px;
+      background: linear-gradient(to top, #888, transparent);
+      animation: smoke 2s ease-out infinite;
+      opacity: 0.6;
+    }
+
+    @keyframes burn { 0%, 100% { height: 50px; } 50% { height: 48px; } }
+    @keyframes flame { from { transform: translateX(-50%) scale(1); } to { transform: translateX(-50%) scale(1.2); } }
+    @keyframes smoke { 0% { opacity: 0.6; top: -30px; } 100% { opacity: 0; top: -60px; } }
+
+    /* Info */
+    .info { font-size: 10px; opacity: 0.6; margin-bottom: 5px; }
+    .info.gold { color: var(--gold); }
+
+    /* Input */
+    .input {
+      width: 100%;
+      padding: 10px;
+      background: #111;
+      border: 1px solid var(--neon-dim);
+      border-radius: 4px;
+      color: var(--neon);
+      font-family: inherit;
+      font-size: 12px;
+      margin-bottom: 15px;
+      outline: none;
+    }
+    .input:focus { border-color: var(--neon); box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
+    .input::placeholder { color: var(--neon-dim); }
+
+    /* Offering Options */
+    .options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+
+    .option {
+      padding: 12px 8px;
+      background: transparent;
+      border: 1px solid var(--neon-dim);
+      border-radius: 4px;
+      color: var(--neon);
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .option:hover, .option.selected {
+      background: rgba(0, 255, 136, 0.1);
+      border-color: var(--neon);
+      box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+    }
+
+    .option .price { display: block; font-size: 14px; font-weight: bold; margin-top: 4px; color: var(--gold); }
+
+    /* Buttons */
+    .btn {
+      padding: 12px 24px;
+      background: transparent;
+      border: 1px solid var(--neon);
+      color: var(--neon);
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.3s;
+      margin: 5px;
+    }
+
+    .btn:hover { background: rgba(0, 255, 136, 0.1); box-shadow: 0 0 15px rgba(0, 255, 136, 0.3); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn.gold { border-color: var(--gold); color: var(--gold); }
+    .btn.gold:hover { background: rgba(255, 170, 0, 0.1); box-shadow: 0 0 15px rgba(255, 170, 0, 0.3); }
+    .btn.full { width: 100%; margin-top: 10px; padding: 15px; font-size: 14px; }
+
+    /* Status */
+    .status { font-size: 11px; margin-top: 15px; min-height: 20px; opacity: 0.6; }
+    .status.error { color: #ff4444; opacity: 1; }
+    .status.success { color: var(--neon); opacity: 1; }
+    .status a { color: var(--neon); }
+
+    /* Blessing Animation */
+    .blessing {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--gold);
+      font-size: 24px;
+      text-shadow: 0 0 20px var(--gold), 0 0 40px var(--flame);
+      animation: pop 2s ease-out forwards;
+      pointer-events: none;
+      z-index: 1000;
+      white-space: nowrap;
+    }
+
+    @keyframes pop {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+      20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+      80% { opacity: 1; transform: translate(-50%, -60%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -70%) scale(0.8); }
+    }
+
+    /* Loading */
+    .loading {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--neon-dim);
+      border-top-color: var(--neon);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <pre class="buddha">                  _oo0oo_
+                 o8888888o
+                 88" . "88
+                 (| -_- |)
+                 0\  =  /0
+               ___/`---'\___
+             .' \\|     |// '.
+            / \\|||  :  |||// \
+           / _||||| -:- |||||- \
+          |   | \\\  -  /// |   |
+          | \_|  ''\---/''  |_/ |
+          \  .-\__  '-'  ___/-. /
+        ___'. .'  /--.--\  `. .'___
+     ."" '<  `.___\_<|>_/___.' >' "".
+    | | :  `- \`.;`\ _ /`;.`/ - ` : | |
+    \  \ `_.   \_ __\ /__ _/   .-` /  /
+=====`-.____`.___ \_____/___.-`___.-'=====
+                  `=---='
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          佛祖保佑         永無BUG
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</pre>
+    <div class="title">C Y B E R _ B U D D H A <span class="badge">x402</span></div>
+
+    <div class="section">
+      <div class="section-title">~ 赛博上香 · 链上许愿 ~</div>
+      <div class="incense-wrap" id="incense"></div>
+      <div class="info" id="wallet">未连接钱包</div>
+      <div class="info gold" id="network"></div>
+      <input type="text" class="input" id="wish" placeholder="输入你的愿望..." maxlength="100">
+      <div class="options" id="options"></div>
+      <button class="btn gold" id="connect">连接钱包</button>
+      <button class="btn full" id="offer" disabled>🙏 上香许愿</button>
+      <div class="status" id="status"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    // ============================================================
+    // Cyber Buddha - x402 Client
+    // ============================================================
+
+    const NETWORK_CONFIG = {
+      'base': { chainId: 8453, name: 'Base' },
+      'base-sepolia': { chainId: 84532, name: 'Base Sepolia' },
+      'polygon': { chainId: 137, name: 'Polygon' },
+      'polygon-amoy': { chainId: 80002, name: 'Polygon Amoy' },
+      'avalanche': { chainId: 43114, name: 'Avalanche' },
+      'avalanche-fuji': { chainId: 43113, name: 'Avalanche Fuji' },
+    };
+
+    // State
+    const state = {
+      address: null,
+      chainId: null,
+      config: null,
+      selected: 'medium',
+    };
+
+    // DOM Elements
+    const $ = (id) => document.getElementById(id);
+    const dom = {
+      incense: $('incense'),
+      wallet: $('wallet'),
+      network: $('network'),
+      wish: $('wish'),
+      options: $('options'),
+      connect: $('connect'),
+      offer: $('offer'),
+      status: $('status'),
+    };
+
+    // ============================================================
+    // API
+    // ============================================================
+
+    async function fetchConfig() {
+      const res = await fetch('/api/config');
+      return res.json();
+    }
+
+    async function makePayment(path, wish) {
+      // First request - get 402 response
+      const res = await fetch(path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wish }),
+      });
+
+      if (res.status !== 402) {
+        if (res.ok) return res.json();
+        throw new Error(`Unexpected status: ${res.status}`);
+      }
+
+      // Parse 402 response
+      const paymentRequired = await res.json();
+      const requirements = paymentRequired.accepts?.[0];
+      if (!requirements) throw new Error('No payment requirements');
+
+      // Create payment authorization
+      const payment = await createPaymentAuth(requirements);
+
+      // Retry with payment
+      const payRes = await fetch(path, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-PAYMENT': btoa(JSON.stringify(payment)),
+        },
+        body: JSON.stringify({ wish }),
+      });
+
+      if (!payRes.ok) {
+        const err = await payRes.json().catch(() => ({}));
+        throw new Error(err.error || `Payment failed: ${payRes.status}`);
+      }
+
+      return payRes.json();
+    }
+
+    // ============================================================
+    // Wallet & Payment
+    // ============================================================
+
+    async function connectWallet() {
+      if (!window.ethereum) throw new Error('请安装 MetaMask');
+
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      state.address = accounts[0];
+      state.chainId = parseInt(await window.ethereum.request({ method: 'eth_chainId' }), 16);
+
+      window.ethereum.on('accountsChanged', (accs) => {
+        state.address = accs[0] || null;
+        updateUI();
+      });
+
+      window.ethereum.on('chainChanged', () => location.reload());
+    }
+
+    async function switchNetwork(targetChainId) {
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: `0x${targetChainId.toString(16)}` }],
+        });
+      } catch (e) {
+        if (e.code === 4902) throw new Error('请手动添加该网络');
+        throw e;
+      }
+    }
+
+    async function createPaymentAuth(requirements) {
+      const { asset, payTo, maxAmountRequired, extra, network } = requirements;
+
+      // Generate nonce
+      const nonce = '0x' + [...crypto.getRandomValues(new Uint8Array(32))]
+        .map(b => b.toString(16).padStart(2, '0')).join('');
+
+      const now = Math.floor(Date.now() / 1000);
+      const validAfter = 0;
+      const validBefore = now + 3600;
+
+      const targetConfig = NETWORK_CONFIG[network];
+      const chainId = targetConfig?.chainId || state.chainId;
+
+      // Ensure correct network
+      if (state.chainId !== chainId) {
+        await switchNetwork(chainId);
+        state.chainId = chainId;
+      }
+
+      // EIP-712 Domain
+      const domain = {
+        name: extra?.name || 'USDC',
+        version: extra?.version || '2',
+        chainId,
+        verifyingContract: asset,
+      };
+
+      // EIP-712 Types
+      const types = {
+        TransferWithAuthorization: [
+          { name: 'from', type: 'address' },
+          { name: 'to', type: 'address' },
+          { name: 'value', type: 'uint256' },
+          { name: 'validAfter', type: 'uint256' },
+          { name: 'validBefore', type: 'uint256' },
+          { name: 'nonce', type: 'bytes32' },
+        ],
+      };
+
+      const message = {
+        from: state.address,
+        to: payTo,
+        value: maxAmountRequired,
+        validAfter,
+        validBefore,
+        nonce,
+      };
+
+      // Sign
+      const sig = await window.ethereum.request({
+        method: 'eth_signTypedData_v4',
+        params: [state.address, JSON.stringify({ types, domain, primaryType: 'TransferWithAuthorization', message })],
+      });
+
+      return {
+        x402Version: 1,
+        scheme: 'exact',
+        network,
+        payload: {
+          signature: sig,
+          authorization: {
+            from: state.address,
+            to: payTo,
+            value: maxAmountRequired,
+            validAfter: `0x${validAfter.toString(16)}`,
+            validBefore: `0x${validBefore.toString(16)}`,
+            nonce,
+          },
+        },
+      };
+    }
+
+    // ============================================================
+    // UI
+    // ============================================================
+
+    function updateUI() {
+      // Wallet info
+      if (state.address) {
+        dom.wallet.textContent = `${state.address.slice(0, 6)}...${state.address.slice(-4)}`;
+        dom.connect.textContent = '已连接';
+        dom.offer.disabled = false;
+      } else {
+        dom.wallet.textContent = '未连接钱包';
+        dom.connect.textContent = '连接钱包';
+        dom.offer.disabled = true;
+      }
+
+      // Network info
+      if (state.config) {
+        dom.network.textContent = `网络: ${state.config.network}`;
+      }
+    }
+
+    function renderOptions() {
+      if (!state.config?.offerings) return;
+
+      dom.options.innerHTML = state.config.offerings.map(o => `
+        <button class="option ${o.id === state.selected ? 'selected' : ''}" data-id="${o.id}">
+          ${o.name}<span class="price">${o.price}</span>
+        </button>
+      `).join('');
+
+      dom.options.querySelectorAll('.option').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.selected = btn.dataset.id;
+          renderOptions();
+          renderIncense();
+        });
+      });
+    }
+
+    function renderIncense() {
+      const counts = { small: 1, medium: 2, large: 3, premium: 5 };
+      const count = counts[state.selected] || 2;
+      dom.incense.innerHTML = Array(count).fill('<div class="incense"></div>').join('');
+    }
+
+    function setStatus(msg, type = '') {
+      dom.status.textContent = msg;
+      dom.status.className = `status ${type}`;
+    }
+
+    function showBlessing(text) {
+      const el = document.createElement('div');
+      el.className = 'blessing';
+      el.textContent = text;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 2000);
+    }
+
+    // ============================================================
+    // Event Handlers
+    // ============================================================
+
+    dom.connect.addEventListener('click', async () => {
+      try {
+        setStatus('连接中...');
+        await connectWallet();
+        updateUI();
+        setStatus('');
+      } catch (e) {
+        setStatus(e.message, 'error');
+      }
+    });
+
+    dom.offer.addEventListener('click', async () => {
+      if (!state.address) return;
+
+      const offering = state.config.offerings.find(o => o.id === state.selected);
+      if (!offering) return;
+
+      try {
+        dom.offer.disabled = true;
+        setStatus('<span class="loading"></span>准备支付...');
+
+        const wish = dom.wish.value || '心诚则灵';
+        const result = await makePayment(offering.path, wish);
+
+        setStatus(result.message, 'success');
+        showBlessing(result.blessing);
+        dom.wish.value = '';
+      } catch (e) {
+        setStatus(`支付失败: ${e.message}`, 'error');
+      } finally {
+        dom.offer.disabled = !state.address;
+      }
+    });
+
+    // ============================================================
+    // Init
+    // ============================================================
+
+    async function init() {
+      try {
+        state.config = await fetchConfig();
+        updateUI();
+        renderOptions();
+        renderIncense();
+      } catch (e) {
+        setStatus('加载配置失败', 'error');
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

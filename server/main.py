@@ -17,7 +17,13 @@ load_dotenv()
 # 配置
 ADDRESS = os.getenv("ADDRESS", "0x0000000000000000000000000000000000000000")
 NETWORK = os.getenv("NETWORK", "base-sepolia")
-FACILITATOR_URL = os.getenv("FACILITATOR_URL", "https://x402.org/facilitator")
+# Facilitator URLs
+# PayAI: 支持主网，无需认证
+# x402.org: 仅测试网
+# CDP: 需要认证，主网支持待确认
+PAYAI_FACILITATOR_URL = "https://facilitator.payai.network"
+DEFAULT_FACILITATOR_URL = "https://x402.org/facilitator"
+FACILITATOR_URL = os.getenv("FACILITATOR_URL", "")
 CDP_API_KEY_ID = os.getenv("CDP_API_KEY_ID", "")
 CDP_API_KEY_SECRET = os.getenv("CDP_API_KEY_SECRET", "")
 
@@ -33,10 +39,21 @@ async def create_cdp_headers():
         }
     return {}
 
+# 自动选择 facilitator URL
+# 主网用 PayAI，测试网用 x402.org
+if FACILITATOR_URL:
+    _facilitator_url = FACILITATOR_URL
+elif NETWORK in ["base", "polygon", "avalanche", "sei", "iotex", "solana", "peaq", "xlayer"]:
+    _facilitator_url = PAYAI_FACILITATOR_URL
+else:
+    _facilitator_url = DEFAULT_FACILITATOR_URL
+
 FACILITATOR_CONFIG = {
-    "url": FACILITATOR_URL,
+    "url": _facilitator_url,
     "create_headers": create_cdp_headers if CDP_API_KEY_ID else None,
 }
+
+print(f"Using facilitator: {_facilitator_url}")
 
 app = FastAPI(
     title="Cyber Buddha x402",

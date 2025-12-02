@@ -1,108 +1,176 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { paymentMiddleware } from 'x402-hono';
-import type { Env, OfferingResponse } from './types';
-import { FACILITATOR_URL, OFFERINGS, isNetworkSupported } from './config';
+import type { Env, WishRequest, WishResponse, WishConfig, ErrorResponse } from './types';
+import {
+  FACILITATOR_URL,
+  MIN_AMOUNT,
+  USDC_ADDRESSES,
+  isNetworkSupported,
+  usdToAtomicUnits,
+} from './config';
 
 const app = new Hono<{ Bindings: Env }>();
 
-// CORS middleware
-app.use('*', cors({
-  origin: '*',
-  exposeHeaders: ['X-PAYMENT-RESPONSE'],
-}));
+// CORS
+app.use('*', cors({ origin: '*', exposeHeaders: ['X-PAYMENT-RESPONSE'] }));
 
-// Dynamic payment middleware based on env
-app.use('/api/offer/*', async (c, next) => {
+// Health check
+app.get('/api/health', (c) => c.json({ status: 'ok', message: '佛祖在线' }));
+
+// Get wish config
+app.get('/api/wish', (c) => {
+  const network = c.env.NETWORK || 'base-sepolia';
+  const config: WishConfig = {
+    network,
+    asset: USDC_ADDRESSES[network] || USDC_ADDRESSES['base-sepolia'],
+    minAmount: MIN_AMOUNT,
+    recipient: c.env.ADDRESS,
+  };
+  return c.json(config);
+});
+
+// Make a wish (with x402 payment)
+app.post('/api/wish', async (c) => {
   const address = c.env.ADDRESS;
   const network = c.env.NETWORK || 'base-sepolia';
   const facilitatorUrl = c.env.FACILITATOR_URL || FACILITATOR_URL;
 
   if (!address) {
-    return c.json({ error: 'ADDRESS not configured' }, 500);
+    return c.json<ErrorResponse>({ error: { code: 'NOT_CONFIGURED', message: 'ADDRESS not configured' } }, 500);
   }
 
   if (!isNetworkSupported(network)) {
-    return c.json({ error: `Unsupported network: ${network}` }, 500);
+    return c.json<ErrorResponse>({ error: { code: 'INVALID_NETWORK', message: `Unsupported network: ${network}` } }, 500);
   }
 
-  // Build route config from offerings - cast network to satisfy x402-hono types
-  const routeConfig: Record<string, { price: string; network: typeof network }> = {};
-  for (const offering of OFFERINGS) {
-    routeConfig[offering.path] = {
-      price: offering.price,
-      network,
-    };
-  }
-
-  const middleware = paymentMiddleware(
-    address as `0x${string}`,
-    routeConfig,
-    { url: facilitatorUrl as `${string}://${string}` }
-  );
-
-  return middleware(c, next);
-});
-
-// Health check
-app.get('/api/health', (c) => {
-  return c.json({ status: 'ok', message: '佛祖在线' });
-});
-
-// Get config (for frontend)
-app.get('/api/config', (c) => {
-  return c.json({
-    network: c.env.NETWORK || 'base-sepolia',
-    offerings: OFFERINGS,
-  });
-});
-
-// Offering endpoints
-const blessings: Record<string, { message: string; blessing: (wish: string) => string }> = {
-  small: {
-    message: '小香已点燃',
-    blessing: (wish) => `🙏 ${wish} 🙏`,
-  },
-  medium: {
-    message: '中香已点燃',
-    blessing: (wish) => `🙏 ${wish} 🙏`,
-  },
-  large: {
-    message: '大香已点燃',
-    blessing: (wish) => `🙏✨ ${wish} ✨🙏`,
-  },
-  premium: {
-    message: '高香已点燃，佛光普照',
-    blessing: (wish) => `🙏✨ ${wish} ✨🙏`,
-  },
-};
-
-app.post('/api/offer/:type', async (c) => {
-  const type = c.req.param('type');
-  const config = blessings[type];
-
-  if (!config) {
-    return c.json({ error: 'Invalid offering type' }, 400);
-  }
-
-  let wish = '心诚则灵';
+  // Parse request body
+  let body: WishRequest;
   try {
-    const body = await c.req.json<{ wish?: string }>();
-    if (body.wish) {
-      wish = body.wish;
-    }
+    body = await c.req.json<WishRequest>();
   } catch {
-    // No body or invalid JSON, use default wish
+    return c.json<ErrorResponse>({ error: { code: 'INVALID_BODY', message: 'Invalid request body' } }, 400);
   }
 
-  const response: OfferingResponse = {
-    success: true,
-    message: config.message,
-    blessing: config.blessing(wish),
-    type,
-  };
+  const amount = parseFloat(body.amount);
+  if (isNaN(amount) || amount < MIN_AMOUNT) {
+    return c.json<ErrorResponse>({ error: { code: 'INVALID_AMOUNT', message: `Minimum amount is $${MIN_AMOUNT}` } }, 400);
+  }
 
-  return c.json(response);
+  const asset = USDC_ADDRESSES[network];
+  if (!asset) {
+    return c.json<ErrorResponse>({ error: { code: 'UNSUPPORTED_NETWORK', message: 'USDC not available on this network' } }, 400);
+  }
+
+  // Check for payment header
+  const paymentHeader = c.req.header('X-PAYMENT');
+
+  if (!paymentHeader) {
+    // Return 402 Payment Required
+    const paymentRequirements = {
+      scheme: 'exact' as const,
+      network,
+      maxAmountRequired: usdToAtomicUnits(amount),
+      resource: new URL('/api/wish', c.req.url).href,
+      description: `许愿 - $${amount}`,
+      mimeType: 'application/json',
+      payTo: address,
+      maxTimeoutSeconds: 300,
+      asset,
+      extra: { name: 'USDC', version: '2' },
+    };
+
+    return c.json({
+      x402Version: 1,
+      error: 'X-PAYMENT header is required',
+      accepts: [paymentRequirements],
+    }, 402);
+  }
+
+  // Verify payment with facilitator
+  try {
+    const paymentPayload = JSON.parse(atob(paymentHeader));
+
+    const verifyResponse = await fetch(`${facilitatorUrl}/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        paymentPayload,
+        paymentRequirements: {
+          scheme: 'exact',
+          network,
+          maxAmountRequired: usdToAtomicUnits(amount),
+          resource: new URL('/api/wish', c.req.url).href,
+          description: `许愿 - $${amount}`,
+          mimeType: 'application/json',
+          payTo: address,
+          maxTimeoutSeconds: 300,
+          asset,
+          extra: { name: 'USDC', version: '2' },
+        },
+      }),
+    });
+
+    const verifyResult = await verifyResponse.json() as { isValid: boolean; invalidReason?: string; payer?: string };
+
+    if (!verifyResult.isValid) {
+      return c.json({
+        x402Version: 1,
+        error: verifyResult.invalidReason || 'Payment verification failed',
+        accepts: [{
+          scheme: 'exact',
+          network,
+          maxAmountRequired: usdToAtomicUnits(amount),
+          resource: new URL('/api/wish', c.req.url).href,
+          description: `许愿 - $${amount}`,
+          mimeType: 'application/json',
+          payTo: address,
+          maxTimeoutSeconds: 300,
+          asset,
+          extra: { name: 'USDC', version: '2' },
+        }],
+        payer: verifyResult.payer,
+      }, 402);
+    }
+
+    // Payment verified, settle it
+    const settleResponse = await fetch(`${facilitatorUrl}/settle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        paymentPayload,
+        paymentRequirements: {
+          scheme: 'exact',
+          network,
+          maxAmountRequired: usdToAtomicUnits(amount),
+          resource: new URL('/api/wish', c.req.url).href,
+          description: `许愿 - $${amount}`,
+          mimeType: 'application/json',
+          payTo: address,
+          maxTimeoutSeconds: 300,
+          asset,
+          extra: { name: 'USDC', version: '2' },
+        },
+      }),
+    });
+
+    const settleResult = await settleResponse.json() as { success: boolean; transaction?: string; errorReason?: string };
+
+    if (!settleResult.success) {
+      return c.json<ErrorResponse>({ error: { code: 'SETTLE_FAILED', message: settleResult.errorReason || 'Settlement failed' } }, 500);
+    }
+
+    // Success!
+    const wish = body.content || '心诚则灵';
+    const response: WishResponse = {
+      message: '香已点燃，佛祖已收到你的心意',
+      blessing: `🙏 ${wish} 🙏`,
+    };
+
+    return c.json(response);
+
+  } catch (err) {
+    return c.json<ErrorResponse>({ error: { code: 'PAYMENT_ERROR', message: 'Payment processing failed' } }, 500);
+  }
 });
 
 export default app;

@@ -1,6 +1,4 @@
-/**
- * Supported blockchain networks (aligned with x402-hono)
- */
+/** Supported EVM networks */
 export type Network =
   | 'base'
   | 'base-sepolia'
@@ -8,43 +6,42 @@ export type Network =
   | 'polygon-amoy'
   | 'avalanche'
   | 'avalanche-fuji'
-  | 'solana'
-  | 'solana-devnet'
   | 'sei'
   | 'sei-testnet'
   | 'iotex'
   | 'peaq'
   | 'abstract'
-  | 'abstract-testnet'
-  | 'story'
-  | 'educhain'
-  | 'skale-base-sepolia';
+  | 'abstract-testnet';
 
-/**
- * Offering tier configuration
- */
-export interface OfferingTier {
-  id: string;
-  name: string;
-  nameEn: string;
-  price: string;
-  path: string;
+/** Wish request body */
+export interface WishRequest {
+  amount: string;    // USD amount, e.g. "1.00"
+  content?: string;  // Optional wish content
 }
 
-/**
- * Offering response after successful payment
- */
-export interface OfferingResponse {
-  success: boolean;
+/** Wish response after successful payment */
+export interface WishResponse {
   message: string;
   blessing: string;
-  type: string;
-  txHash?: string;
 }
 
-/**
- * Environment bindings for Cloudflare Workers
- */
+/** Error response */
+export interface ErrorResponse {
+  error: {
+    code: string;
+    message: string;
+  };
+}
+
+/** GET /api/wish response */
+export interface WishConfig {
+  network: Network;
+  asset: string;
+  minAmount: number;
+  recipient: string;
+}
+
+/** Cloudflare Workers environment bindings */
 export interface Env {
   ADDRESS: string;
   NETWORK: Network;

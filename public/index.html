@@ -59,7 +59,6 @@
       to { text-shadow: 0 0 20px var(--neon), 0 0 40px var(--neon), 0 0 60px var(--neon); opacity: 1; }
     }
 
-    /* Offering Section */
     .section {
       margin-top: 30px;
       padding: 20px;
@@ -77,7 +76,6 @@
       text-shadow: 0 0 10px var(--neon);
     }
 
-    /* Incense Animation */
     .incense-wrap { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; min-height: 60px; }
 
     .incense {
@@ -120,11 +118,9 @@
     @keyframes flame { from { transform: translateX(-50%) scale(1); } to { transform: translateX(-50%) scale(1.2); } }
     @keyframes smoke { 0% { opacity: 0.6; top: -30px; } 100% { opacity: 0; top: -60px; } }
 
-    /* Info */
     .info { font-size: 10px; opacity: 0.6; margin-bottom: 5px; }
     .info.gold { color: var(--gold); }
 
-    /* Input */
     .input {
       width: 100%;
       padding: 10px;
@@ -134,36 +130,15 @@
       color: var(--neon);
       font-family: inherit;
       font-size: 12px;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
       outline: none;
     }
     .input:focus { border-color: var(--neon); box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
     .input::placeholder { color: var(--neon-dim); }
 
-    /* Offering Options */
-    .options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+    .amount-label { font-size: 10px; color: var(--neon-dim); margin-bottom: 5px; }
+    .input.amount { text-align: center; font-size: 16px; color: var(--gold); margin-bottom: 15px; }
 
-    .option {
-      padding: 12px 8px;
-      background: transparent;
-      border: 1px solid var(--neon-dim);
-      border-radius: 4px;
-      color: var(--neon);
-      font-family: inherit;
-      font-size: 11px;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-
-    .option:hover, .option.selected {
-      background: rgba(0, 255, 136, 0.1);
-      border-color: var(--neon);
-      box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
-    }
-
-    .option .price { display: block; font-size: 14px; font-weight: bold; margin-top: 4px; color: var(--gold); }
-
-    /* Buttons */
     .btn {
       padding: 12px 24px;
       background: transparent;
@@ -183,13 +158,10 @@
     .btn.gold:hover { background: rgba(255, 170, 0, 0.1); box-shadow: 0 0 15px rgba(255, 170, 0, 0.3); }
     .btn.full { width: 100%; margin-top: 10px; padding: 15px; font-size: 14px; }
 
-    /* Status */
     .status { font-size: 11px; margin-top: 15px; min-height: 20px; opacity: 0.6; }
     .status.error { color: #ff4444; opacity: 1; }
     .status.success { color: var(--neon); opacity: 1; }
-    .status a { color: var(--neon); }
 
-    /* Blessing Animation */
     .blessing {
       position: fixed;
       top: 50%;
@@ -210,19 +182,6 @@
       80% { opacity: 1; transform: translate(-50%, -60%) scale(1); }
       100% { opacity: 0; transform: translate(-50%, -70%) scale(0.8); }
     }
-
-    /* Loading */
-    .loading {
-      display: inline-block;
-      width: 12px;
-      height: 12px;
-      border: 2px solid var(--neon-dim);
-      border-top-color: var(--neon);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-right: 8px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -253,11 +212,12 @@
 
     <div class="section">
       <div class="section-title">~ 赛博上香 · 链上许愿 ~</div>
-      <div class="incense-wrap" id="incense"></div>
+      <div class="incense-wrap"><div class="incense"></div><div class="incense"></div><div class="incense"></div></div>
       <div class="info" id="wallet">未连接钱包</div>
       <div class="info gold" id="network"></div>
       <input type="text" class="input" id="wish" placeholder="输入你的愿望..." maxlength="100">
-      <div class="options" id="options"></div>
+      <div class="amount-label">香火钱 (USDC)</div>
+      <input type="number" class="input amount" id="amount" placeholder="1.00" min="0.01" step="0.01" value="1.00">
       <button class="btn gold" id="connect">连接钱包</button>
       <button class="btn full" id="offer" disabled>🙏 上香许愿</button>
       <div class="status" id="status"></div>
@@ -265,263 +225,105 @@
   </div>
 
   <script type="module">
-    // ============================================================
-    // Cyber Buddha - x402 Client
-    // ============================================================
-
-    // Import viem for proper EIP-712 handling
     import { createWalletClient, custom, getAddress } from 'https://esm.sh/viem@2.21.0';
-    import { baseSepolia } from 'https://esm.sh/viem@2.21.0/chains';
 
     const NETWORK_CONFIG = {
-      'base': { chainId: 8453, name: 'Base' },
-      'base-sepolia': { chainId: 84532, name: 'Base Sepolia' },
-      'polygon': { chainId: 137, name: 'Polygon' },
-      'polygon-amoy': { chainId: 80002, name: 'Polygon Amoy' },
-      'avalanche': { chainId: 43114, name: 'Avalanche' },
-      'avalanche-fuji': { chainId: 43113, name: 'Avalanche Fuji' },
+      'base': { chainId: 8453 },
+      'base-sepolia': { chainId: 84532 },
+      'polygon': { chainId: 137 },
+      'polygon-amoy': { chainId: 80002 },
+      'avalanche': { chainId: 43114 },
+      'avalanche-fuji': { chainId: 43113 },
     };
 
-    // State
-    const state = {
-      address: null,
-      chainId: null,
-      config: null,
-      selected: 'medium',
-    };
-
-    // DOM Elements
-    const $ = (id) => document.getElementById(id);
-    const dom = {
-      incense: $('incense'),
-      wallet: $('wallet'),
-      network: $('network'),
-      wish: $('wish'),
-      options: $('options'),
-      connect: $('connect'),
-      offer: $('offer'),
-      status: $('status'),
-    };
-
-    // ============================================================
-    // API
-    // ============================================================
+    const state = { address: null, chainId: null, config: null };
+    const $ = id => document.getElementById(id);
+    const dom = { wallet: $('wallet'), network: $('network'), wish: $('wish'), amount: $('amount'), connect: $('connect'), offer: $('offer'), status: $('status') };
 
     async function fetchConfig() {
-      const res = await fetch('/api/config');
-      return res.json();
+      return (await fetch('/api/wish')).json();
     }
 
-    async function makePayment(path, wish) {
-      // First request - get 402 response
-      const res = await fetch(path, {
+    async function makeWish(amount, content) {
+      const res = await fetch('/api/wish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ wish }),
+        body: JSON.stringify({ amount, content }),
       });
 
       if (res.status !== 402) {
         if (res.ok) return res.json();
-        throw new Error(`Unexpected status: ${res.status}`);
+        const err = await res.json();
+        throw new Error(err.error?.message || 'Request failed');
       }
 
-      // Parse 402 response
-      const paymentRequired = await res.json();
-      const requirements = paymentRequired.accepts?.[0];
-      if (!requirements) throw new Error('No payment requirements');
+      const { accepts } = await res.json();
+      if (!accepts?.[0]) throw new Error('No payment requirements');
 
-      // Create payment authorization
-      const payment = await createPaymentAuth(requirements);
-
-      // Retry with payment
-      const payRes = await fetch(path, {
+      const payment = await createPaymentAuth(accepts[0]);
+      const payRes = await fetch('/api/wish', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-PAYMENT': btoa(JSON.stringify(payment)),
-        },
-        body: JSON.stringify({ wish }),
+        headers: { 'Content-Type': 'application/json', 'X-PAYMENT': btoa(JSON.stringify(payment)) },
+        body: JSON.stringify({ amount, content }),
       });
 
       if (!payRes.ok) {
         const err = await payRes.json().catch(() => ({}));
-        throw new Error(err.error || `Payment failed: ${payRes.status}`);
+        throw new Error(err.error?.message || 'Payment failed');
       }
-
       return payRes.json();
     }
 
-    // ============================================================
-    // Wallet & Payment
-    // ============================================================
-
     async function connectWallet() {
       if (!window.ethereum) throw new Error('请安装 MetaMask');
-
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      // MetaMask returns checksummed addresses
       state.address = accounts[0];
       state.chainId = parseInt(await window.ethereum.request({ method: 'eth_chainId' }), 16);
-
-      window.ethereum.on('accountsChanged', (accs) => {
-        state.address = accs[0] || null;
-        updateUI();
-      });
-
+      window.ethereum.on('accountsChanged', accs => { state.address = accs[0] || null; updateUI(); });
       window.ethereum.on('chainChanged', () => location.reload());
     }
 
-    async function switchNetwork(targetChainId) {
-      try {
-        await window.ethereum.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: `0x${targetChainId.toString(16)}` }],
-        });
-      } catch (e) {
-        if (e.code === 4902) throw new Error('请手动添加该网络');
-        throw e;
-      }
-    }
-
-    async function createPaymentAuth(requirements) {
-      const { asset, payTo, maxAmountRequired, extra, network } = requirements;
-
-      // Generate nonce (32 bytes hex)
-      const nonce = '0x' + [...crypto.getRandomValues(new Uint8Array(32))]
-        .map(b => b.toString(16).padStart(2, '0')).join('');
-
-      // validAfter: 10 minutes ago, validBefore: maxTimeoutSeconds from now
+    async function createPaymentAuth(req) {
+      const { asset, payTo, maxAmountRequired, extra, network, maxTimeoutSeconds } = req;
+      const nonce = '0x' + [...crypto.getRandomValues(new Uint8Array(32))].map(b => b.toString(16).padStart(2, '0')).join('');
       const now = Math.floor(Date.now() / 1000);
       const validAfter = BigInt(now - 600);
-      const validBefore = BigInt(now + (requirements.maxTimeoutSeconds || 3600));
+      const validBefore = BigInt(now + (maxTimeoutSeconds || 3600));
+      const chainId = NETWORK_CONFIG[network]?.chainId || state.chainId;
 
-      const targetConfig = NETWORK_CONFIG[network];
-      const chainId = targetConfig?.chainId || state.chainId;
-
-      // Ensure correct network
       if (state.chainId !== chainId) {
-        await switchNetwork(chainId);
+        await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: `0x${chainId.toString(16)}` }] });
         state.chainId = chainId;
       }
 
-      // Create viem wallet client
-      const walletClient = createWalletClient({
-        chain: { id: chainId, name: network },
-        transport: custom(window.ethereum),
-      });
+      const walletClient = createWalletClient({ chain: { id: chainId, name: network }, transport: custom(window.ethereum) });
+      const from = getAddress(state.address), to = getAddress(payTo);
 
-      // Get checksummed addresses
-      const fromAddress = getAddress(state.address);
-      const toAddress = getAddress(payTo);
-      const assetAddress = getAddress(asset);
-
-      // EIP-712 Domain (matching x402 exactly)
-      const domain = {
-        name: extra?.name || 'USDC',
-        version: extra?.version || '2',
-        chainId,
-        verifyingContract: assetAddress,
-      };
-
-      // EIP-712 Types
-      const types = {
-        TransferWithAuthorization: [
-          { name: 'from', type: 'address' },
-          { name: 'to', type: 'address' },
-          { name: 'value', type: 'uint256' },
-          { name: 'validAfter', type: 'uint256' },
-          { name: 'validBefore', type: 'uint256' },
-          { name: 'nonce', type: 'bytes32' },
-        ],
-      };
-
-      // EIP-712 Message (using BigInt for uint256)
-      const message = {
-        from: fromAddress,
-        to: toAddress,
-        value: BigInt(maxAmountRequired),
-        validAfter,
-        validBefore,
-        nonce,
-      };
-
-      // Sign using viem (matches x402 client exactly)
       const signature = await walletClient.signTypedData({
-        account: fromAddress,
-        domain,
-        types,
+        account: from,
+        domain: { name: extra?.name || 'USDC', version: extra?.version || '2', chainId, verifyingContract: getAddress(asset) },
+        types: { TransferWithAuthorization: [
+          { name: 'from', type: 'address' }, { name: 'to', type: 'address' }, { name: 'value', type: 'uint256' },
+          { name: 'validAfter', type: 'uint256' }, { name: 'validBefore', type: 'uint256' }, { name: 'nonce', type: 'bytes32' },
+        ]},
         primaryType: 'TransferWithAuthorization',
-        message,
+        message: { from, to, value: BigInt(maxAmountRequired), validAfter, validBefore, nonce },
       });
 
       return {
-        x402Version: 1,
-        scheme: 'exact',
-        network,
-        payload: {
-          signature,
-          authorization: {
-            from: fromAddress,
-            to: toAddress,
-            value: maxAmountRequired,
-            validAfter: validAfter.toString(),
-            validBefore: validBefore.toString(),
-            nonce,
-          },
-        },
+        x402Version: 1, scheme: 'exact', network,
+        payload: { signature, authorization: { from, to, value: maxAmountRequired, validAfter: validAfter.toString(), validBefore: validBefore.toString(), nonce } },
       };
     }
 
-    // ============================================================
-    // UI
-    // ============================================================
-
     function updateUI() {
-      // Wallet info
-      if (state.address) {
-        dom.wallet.textContent = `${state.address.slice(0, 6)}...${state.address.slice(-4)}`;
-        dom.connect.textContent = '已连接';
-        dom.offer.disabled = false;
-      } else {
-        dom.wallet.textContent = '未连接钱包';
-        dom.connect.textContent = '连接钱包';
-        dom.offer.disabled = true;
-      }
-
-      // Network info
-      if (state.config) {
-        dom.network.textContent = `网络: ${state.config.network}`;
-      }
+      dom.wallet.textContent = state.address ? `${state.address.slice(0, 6)}...${state.address.slice(-4)}` : '未连接钱包';
+      dom.connect.textContent = state.address ? '已连接' : '连接钱包';
+      dom.offer.disabled = !state.address;
+      if (state.config) dom.network.textContent = `网络: ${state.config.network}`;
     }
 
-    function renderOptions() {
-      if (!state.config?.offerings) return;
-
-      dom.options.innerHTML = state.config.offerings.map(o => `
-        <button class="option ${o.id === state.selected ? 'selected' : ''}" data-id="${o.id}">
-          ${o.name}<span class="price">${o.price}</span>
-        </button>
-      `).join('');
-
-      dom.options.querySelectorAll('.option').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.selected = btn.dataset.id;
-          renderOptions();
-          renderIncense();
-        });
-      });
-    }
-
-    function renderIncense() {
-      const counts = { small: 1, medium: 2, large: 3, premium: 5 };
-      const count = counts[state.selected] || 2;
-      dom.incense.innerHTML = Array(count).fill('<div class="incense"></div>').join('');
-    }
-
-    function setStatus(msg, type = '') {
-      dom.status.textContent = msg;
-      dom.status.className = `status ${type}`;
-    }
+    function setStatus(msg, type = '') { dom.status.innerHTML = msg; dom.status.className = `status ${type}`; }
 
     function showBlessing(text) {
       const el = document.createElement('div');
@@ -531,60 +333,31 @@
       setTimeout(() => el.remove(), 2000);
     }
 
-    // ============================================================
-    // Event Handlers
-    // ============================================================
-
     dom.connect.addEventListener('click', async () => {
-      try {
-        setStatus('连接中...');
-        await connectWallet();
-        updateUI();
-        setStatus('');
-      } catch (e) {
-        setStatus(e.message, 'error');
-      }
+      try { setStatus('连接中...'); await connectWallet(); updateUI(); setStatus(''); }
+      catch (e) { setStatus(e.message, 'error'); }
     });
 
     dom.offer.addEventListener('click', async () => {
       if (!state.address) return;
-
-      const offering = state.config.offerings.find(o => o.id === state.selected);
-      if (!offering) return;
+      const amount = dom.amount.value;
+      if (!amount || parseFloat(amount) < 0.01) { setStatus('最小金额 $0.01', 'error'); return; }
 
       try {
         dom.offer.disabled = true;
-        setStatus('<span class="loading"></span>准备支付...');
-
-        const wish = dom.wish.value || '心诚则灵';
-        const result = await makePayment(offering.path, wish);
-
+        setStatus('准备支付...');
+        const result = await makeWish(amount, dom.wish.value || undefined);
         setStatus(result.message, 'success');
         showBlessing(result.blessing);
         dom.wish.value = '';
-      } catch (e) {
-        setStatus(`支付失败: ${e.message}`, 'error');
-      } finally {
-        dom.offer.disabled = !state.address;
-      }
+      } catch (e) { setStatus(`支付失败: ${e.message}`, 'error'); }
+      finally { dom.offer.disabled = !state.address; }
     });
 
-    // ============================================================
-    // Init
-    // ============================================================
-
-    async function init() {
-      try {
-        state.config = await fetchConfig();
-        updateUI();
-        renderOptions();
-        renderIncense();
-      } catch (e) {
-        setStatus('加载配置失败', 'error');
-      }
-    }
-
-    init();
+    (async () => {
+      try { state.config = await fetchConfig(); updateUI(); }
+      catch { setStatus('加载失败', 'error'); }
+    })();
   </script>
 </body>
 </html>

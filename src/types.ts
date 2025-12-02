@@ -17,6 +17,7 @@ export type Network =
 export interface WishRequest {
   amount: string;    // USD amount, e.g. "1.00"
   content?: string;  // Optional wish content
+  network?: string;  // Optional network override
 }
 
 /** Wish response after successful payment */

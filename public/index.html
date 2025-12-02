@@ -17,7 +17,8 @@
 
     body {
       background: var(--bg);
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -25,7 +26,57 @@
       color: var(--neon);
     }
 
-    .container { text-align: center; padding: 20px; }
+    .header {
+      position: fixed;
+      top: 0;
+      right: 0;
+      padding: 12px 16px;
+      z-index: 100;
+      font-size: 10px;
+    }
+
+    .cursor { animation: blink 1s infinite; }
+    @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+
+    .wallet-status {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      color: var(--neon);
+    }
+    .wallet-status.show { display: flex; }
+    .wallet-status::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--neon);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--neon);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    .chain-select {
+      background: transparent;
+      border: 1px solid #334;
+      color: var(--gold);
+      font-family: inherit;
+      font-size: 10px;
+      padding: 4px 8px;
+      cursor: pointer;
+      outline: none;
+    }
+    .chain-select:hover { border-color: var(--gold); }
+    .chain-select option { background: #111; color: var(--gold); }
+
+    .wallet-addr {
+      font-size: 11px;
+      letter-spacing: 1px;
+      cursor: pointer;
+    }
+    .wallet-addr:hover { opacity: 0.7; }
+
+    .container { text-align: center; padding: 10px; }
 
     .buddha {
       font-size: 12px;
@@ -35,23 +86,33 @@
       animation: glow 2s ease-in-out infinite alternate;
       display: inline-block;
       text-align: left;
+      user-select: none;
     }
 
     .title {
       font-size: 12px;
-      margin-top: 20px;
-      letter-spacing: 8px;
+      margin-top: 12px;
+      letter-spacing: 6px;
       text-shadow: 0 0 10px var(--neon);
+      user-select: none;
     }
 
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      background: linear-gradient(90deg, #7c3aed, #2563eb);
-      border-radius: 4px;
-      font-size: 10px;
-      color: white;
-      margin-left: 8px;
+    .bg-pattern {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0.22;
+      font-size: 12px;
+      line-height: 1.6;
+      letter-spacing: 4px;
+      color: var(--gold);
+      overflow: hidden;
+      white-space: pre-wrap;
+      word-break: break-all;
     }
 
     @keyframes glow {
@@ -59,106 +120,79 @@
       to { text-shadow: 0 0 20px var(--neon), 0 0 40px var(--neon), 0 0 60px var(--neon); opacity: 1; }
     }
 
-    .section {
-      margin-top: 30px;
-      padding: 20px;
-      border: 1px solid var(--neon-dim);
-      border-radius: 8px;
-      background: rgba(10, 10, 10, 0.6);
-      max-width: 400px;
-      margin-left: auto;
-      margin-right: auto;
+    .terminal {
+      margin-top: 15px;
+      text-align: center;
     }
 
-    .section-title {
-      font-size: 14px;
-      margin-bottom: 15px;
-      text-shadow: 0 0 10px var(--neon);
-    }
-
-    .incense-wrap { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; min-height: 60px; }
-
-    .incense {
-      width: 4px;
-      height: 50px;
-      background: linear-gradient(to top, var(--flame), var(--gold));
-      border-radius: 2px;
-      position: relative;
-      animation: burn 3s ease-in-out infinite;
-    }
-
-    .incense::before {
-      content: '';
-      position: absolute;
-      top: -15px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 8px;
-      height: 15px;
-      background: #ff4400;
-      border-radius: 50% 50% 20% 20%;
-      animation: flame 0.5s ease-in-out infinite alternate;
-      box-shadow: 0 0 10px var(--flame), 0 0 20px #ff4400;
-    }
-
-    .incense::after {
-      content: '';
-      position: absolute;
-      top: -30px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 2px;
-      height: 20px;
-      background: linear-gradient(to top, #888, transparent);
-      animation: smoke 2s ease-out infinite;
-      opacity: 0.6;
-    }
-
-    @keyframes burn { 0%, 100% { height: 50px; } 50% { height: 48px; } }
-    @keyframes flame { from { transform: translateX(-50%) scale(1); } to { transform: translateX(-50%) scale(1.2); } }
-    @keyframes smoke { 0% { opacity: 0.6; top: -30px; } 100% { opacity: 0; top: -60px; } }
-
-    .info { font-size: 10px; opacity: 0.6; margin-bottom: 5px; }
-    .info.gold { color: var(--gold); }
-
-    .input {
-      width: 100%;
-      padding: 10px;
-      background: #111;
-      border: 1px solid var(--neon-dim);
-      border-radius: 4px;
+    .wish-input {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--neon-dim);
       color: var(--neon);
       font-family: inherit;
-      font-size: 12px;
-      margin-bottom: 10px;
+      font-size: 14px;
+      padding: 8px 0;
+      width: 280px;
+      outline: none;
+      text-align: center;
+      text-shadow: 0 0 8px var(--neon);
+    }
+    .wish-input:focus { border-color: var(--neon); }
+    .wish-input::placeholder { color: #667; text-shadow: none; }
+
+    .hint {
+      margin-top: 18px;
+      font-size: 11px;
+      color: #667;
+    }
+
+    .amount-inline {
+      background: transparent;
+      border: none;
+      border-bottom: 1px dashed #556;
+      color: #667;
+      font-family: inherit;
+      font-size: 11px;
+      width: 28px;
+      text-align: center;
       outline: none;
     }
-    .input:focus { border-color: var(--neon); box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
-    .input::placeholder { color: var(--neon-dim); }
+    .amount-inline:focus { color: var(--gold); border-color: var(--gold); }
 
-    .amount-label { font-size: 10px; color: var(--neon-dim); margin-bottom: 5px; }
-    .input.amount { text-align: center; font-size: 16px; color: var(--gold); margin-bottom: 15px; }
+    .ascii-btn {
+      margin-top: 18px;
+      background: transparent;
+      border: none;
+      color: var(--neon);
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      text-shadow: 0 0 10px var(--neon);
+      transition: all 0.3s;
+      padding: 0;
+    }
+    .ascii-btn:hover { text-shadow: 0 0 20px var(--neon), 0 0 30px var(--neon); }
+    .ascii-btn:disabled { opacity: 0.3; cursor: not-allowed; text-shadow: none; }
 
     .btn {
-      padding: 12px 24px;
+      padding: 6px 12px;
       background: transparent;
       border: 1px solid var(--neon);
       color: var(--neon);
       font-family: inherit;
-      font-size: 12px;
+      font-size: 10px;
       cursor: pointer;
-      border-radius: 4px;
+      border-radius: 0;
       transition: all 0.3s;
-      margin: 5px;
     }
 
     .btn:hover { background: rgba(0, 255, 136, 0.1); box-shadow: 0 0 15px rgba(0, 255, 136, 0.3); }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn.gold { border-color: var(--gold); color: var(--gold); }
     .btn.gold:hover { background: rgba(255, 170, 0, 0.1); box-shadow: 0 0 15px rgba(255, 170, 0, 0.3); }
-    .btn.full { width: 100%; margin-top: 10px; padding: 15px; font-size: 14px; }
 
-    .status { font-size: 11px; margin-top: 15px; min-height: 20px; opacity: 0.6; }
+    .status { font-size: 10px; margin-top: 12px; min-height: 14px; opacity: 0.6; text-align: center; }
     .status.error { color: #ff4444; opacity: 1; }
     .status.success { color: var(--neon); opacity: 1; }
 
@@ -185,6 +219,21 @@
   </style>
 </head>
 <body>
+  <div class="bg-pattern" id="bg"></div>
+  <div class="header">
+    <select class="chain-select" id="chain-select">
+      <option value="base-sepolia">Base Sepolia</option>
+      <option value="base">Base</option>
+      <option value="polygon-amoy">Polygon Amoy</option>
+      <option value="polygon">Polygon</option>
+      <option value="avalanche-fuji">Avalanche Fuji</option>
+      <option value="avalanche">Avalanche</option>
+    </select>
+    <div class="wallet-status" id="wallet-status">
+      <span class="wallet-addr" id="wallet"></span>
+    </div>
+  </div>
+
   <div class="container">
     <pre class="buddha">                  _oo0oo_
                  o8888888o
@@ -208,18 +257,14 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
           佛祖保佑         永無BUG
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</pre>
-    <div class="title">C Y B E R _ B U D D H A <span class="badge">x402</span></div>
+    <div class="title">C Y B E R _ B U D D H A</div>
 
-    <div class="section">
-      <div class="section-title">~ 赛博上香 · 链上许愿 ~</div>
-      <div class="incense-wrap"><div class="incense"></div><div class="incense"></div><div class="incense"></div></div>
-      <div class="info" id="wallet">未连接钱包</div>
-      <div class="info gold" id="network"></div>
-      <input type="text" class="input" id="wish" placeholder="输入你的愿望..." maxlength="100">
-      <div class="amount-label">香火钱 (USDC)</div>
-      <input type="number" class="input amount" id="amount" placeholder="1.00" min="0.01" step="0.01" value="1.00">
-      <button class="btn gold" id="connect">连接钱包</button>
-      <button class="btn full" id="offer" disabled>🙏 上香许愿</button>
+    <div class="terminal">
+      <div class="wish-line">
+        <input type="text" class="wish-input" id="wish" placeholder="写下你的愿望..." maxlength="100">
+      </div>
+      <button class="ascii-btn" id="action">:: 点香 ::</button>
+      <div class="hint">[ $ <input type="text" class="amount-inline" id="amount" value="1"> ]</div>
       <div class="status" id="status"></div>
     </div>
   </div>
@@ -238,17 +283,17 @@
 
     const state = { address: null, chainId: null, config: null };
     const $ = id => document.getElementById(id);
-    const dom = { wallet: $('wallet'), network: $('network'), wish: $('wish'), amount: $('amount'), connect: $('connect'), offer: $('offer'), status: $('status') };
+    const dom = { wallet: $('wallet'), walletStatus: $('wallet-status'), chainSelect: $('chain-select'), wish: $('wish'), amount: $('amount'), action: $('action'), status: $('status') };
 
     async function fetchConfig() {
       return (await fetch('/api/wish')).json();
     }
 
-    async function makeWish(amount, content) {
+    async function makeWish(amount, content, network) {
       const res = await fetch('/api/wish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount, content }),
+        body: JSON.stringify({ amount, content, network }),
       });
 
       if (res.status !== 402) {
@@ -264,7 +309,7 @@
       const payRes = await fetch('/api/wish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-PAYMENT': btoa(JSON.stringify(payment)) },
-        body: JSON.stringify({ amount, content }),
+        body: JSON.stringify({ amount, content, network }),
       });
 
       if (!payRes.ok) {
@@ -317,10 +362,12 @@
     }
 
     function updateUI() {
-      dom.wallet.textContent = state.address ? `${state.address.slice(0, 6)}...${state.address.slice(-4)}` : '未连接钱包';
-      dom.connect.textContent = state.address ? '已连接' : '连接钱包';
-      dom.offer.disabled = !state.address;
-      if (state.config) dom.network.textContent = `网络: ${state.config.network}`;
+      if (state.address) {
+        dom.wallet.textContent = `${state.address.slice(0, 6)}...${state.address.slice(-4)}`;
+        dom.walletStatus.classList.add('show');
+      } else {
+        dom.walletStatus.classList.remove('show');
+      }
     }
 
     function setStatus(msg, type = '') { dom.status.innerHTML = msg; dom.status.className = `status ${type}`; }
@@ -333,26 +380,48 @@
       setTimeout(() => el.remove(), 2000);
     }
 
-    dom.connect.addEventListener('click', async () => {
-      try { setStatus('连接中...'); await connectWallet(); updateUI(); setStatus(''); }
-      catch (e) { setStatus(e.message, 'error'); }
-    });
+    dom.action.addEventListener('click', async () => {
+      // Step 1: Connect wallet if needed
+      if (!state.address) {
+        try {
+          dom.action.disabled = true;
+          setStatus('连接钱包...');
+          await connectWallet();
+          updateUI();
+          setStatus('钱包已连接，再次点击点香', 'success');
+        } catch (e) { setStatus(e.message, 'error'); }
+        finally { dom.action.disabled = false; }
+        return;
+      }
 
-    dom.offer.addEventListener('click', async () => {
-      if (!state.address) return;
+      // Step 2: Make wish
       const amount = dom.amount.value;
       if (!amount || parseFloat(amount) < 0.01) { setStatus('最小金额 $0.01', 'error'); return; }
 
       try {
-        dom.offer.disabled = true;
+        dom.action.disabled = true;
         setStatus('准备支付...');
-        const result = await makeWish(amount, dom.wish.value || undefined);
+        const network = dom.chainSelect.value;
+        const result = await makeWish(amount, dom.wish.value || undefined, network);
         setStatus(result.message, 'success');
         showBlessing(result.blessing);
         dom.wish.value = '';
-      } catch (e) { setStatus(`支付失败: ${e.message}`, 'error'); }
-      finally { dom.offer.disabled = !state.address; }
+      } catch (e) { setStatus(e.message, 'error'); }
+      finally { dom.action.disabled = false; }
     });
+
+    // Disconnect wallet on click
+    dom.wallet.addEventListener('click', () => {
+      state.address = null;
+      state.chainId = null;
+      updateUI();
+      setStatus('钱包已断开');
+    });
+
+    // Generate background pattern
+    const bg = document.getElementById('bg');
+    const pattern = 'x402 '.repeat(500);
+    bg.textContent = pattern.repeat(50);
 
     (async () => {
       try { state.config = await fetchConfig(); updateUI(); }

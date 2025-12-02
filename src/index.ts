@@ -32,15 +32,11 @@ app.get('/api/wish', (c) => {
 // Make a wish (with x402 payment)
 app.post('/api/wish', async (c) => {
   const address = c.env.ADDRESS;
-  const network = c.env.NETWORK || 'base-sepolia';
+  const defaultNetwork = c.env.NETWORK || 'base-sepolia';
   const facilitatorUrl = c.env.FACILITATOR_URL || FACILITATOR_URL;
 
   if (!address) {
     return c.json<ErrorResponse>({ error: { code: 'NOT_CONFIGURED', message: 'ADDRESS not configured' } }, 500);
-  }
-
-  if (!isNetworkSupported(network)) {
-    return c.json<ErrorResponse>({ error: { code: 'INVALID_NETWORK', message: `Unsupported network: ${network}` } }, 500);
   }
 
   // Parse request body
@@ -49,6 +45,13 @@ app.post('/api/wish', async (c) => {
     body = await c.req.json<WishRequest>();
   } catch {
     return c.json<ErrorResponse>({ error: { code: 'INVALID_BODY', message: 'Invalid request body' } }, 400);
+  }
+
+  // Use network from request body or fall back to env
+  const network = body.network || defaultNetwork;
+
+  if (!isNetworkSupported(network)) {
+    return c.json<ErrorResponse>({ error: { code: 'INVALID_NETWORK', message: `Unsupported network: ${network}` } }, 400);
   }
 
   const amount = parseFloat(body.amount);
@@ -86,29 +89,43 @@ app.post('/api/wish', async (c) => {
     }, 402);
   }
 
-  // Verify payment with facilitator
+  // Verify and settle payment with facilitator
   try {
     const paymentPayload = JSON.parse(atob(paymentHeader));
 
+    const paymentRequirements = {
+      scheme: 'exact' as const,
+      network,
+      maxAmountRequired: usdToAtomicUnits(amount),
+      resource: new URL('/api/wish', c.req.url).href,
+      description: `许愿 - $${amount}`,
+      mimeType: 'application/json',
+      payTo: address,
+      maxTimeoutSeconds: 300,
+      asset,
+      extra: { name: 'USDC', version: '2' },
+    };
+
+    // Verify payment
     const verifyResponse = await fetch(`${facilitatorUrl}/verify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        x402Version: 1,
         paymentPayload,
-        paymentRequirements: {
-          scheme: 'exact',
-          network,
-          maxAmountRequired: usdToAtomicUnits(amount),
-          resource: new URL('/api/wish', c.req.url).href,
-          description: `许愿 - $${amount}`,
-          mimeType: 'application/json',
-          payTo: address,
-          maxTimeoutSeconds: 300,
-          asset,
-          extra: { name: 'USDC', version: '2' },
-        },
+        paymentRequirements,
       }),
     });
+
+    if (!verifyResponse.ok) {
+      const errorText = await verifyResponse.text();
+      console.error('Verify failed:', verifyResponse.status, errorText);
+      return c.json({
+        x402Version: 1,
+        error: `Verification failed: ${verifyResponse.status}`,
+        accepts: [paymentRequirements],
+      }, 402);
+    }
 
     const verifyResult = await verifyResponse.json() as { isValid: boolean; invalidReason?: string; payer?: string };
 
@@ -116,42 +133,27 @@ app.post('/api/wish', async (c) => {
       return c.json({
         x402Version: 1,
         error: verifyResult.invalidReason || 'Payment verification failed',
-        accepts: [{
-          scheme: 'exact',
-          network,
-          maxAmountRequired: usdToAtomicUnits(amount),
-          resource: new URL('/api/wish', c.req.url).href,
-          description: `许愿 - $${amount}`,
-          mimeType: 'application/json',
-          payTo: address,
-          maxTimeoutSeconds: 300,
-          asset,
-          extra: { name: 'USDC', version: '2' },
-        }],
+        accepts: [paymentRequirements],
         payer: verifyResult.payer,
       }, 402);
     }
 
-    // Payment verified, settle it
+    // Settle payment
     const settleResponse = await fetch(`${facilitatorUrl}/settle`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        x402Version: 1,
         paymentPayload,
-        paymentRequirements: {
-          scheme: 'exact',
-          network,
-          maxAmountRequired: usdToAtomicUnits(amount),
-          resource: new URL('/api/wish', c.req.url).href,
-          description: `许愿 - $${amount}`,
-          mimeType: 'application/json',
-          payTo: address,
-          maxTimeoutSeconds: 300,
-          asset,
-          extra: { name: 'USDC', version: '2' },
-        },
+        paymentRequirements,
       }),
     });
+
+    if (!settleResponse.ok) {
+      const errorText = await settleResponse.text();
+      console.error('Settle failed:', settleResponse.status, errorText);
+      return c.json<ErrorResponse>({ error: { code: 'SETTLE_FAILED', message: `Settlement failed: ${settleResponse.status}` } }, 500);
+    }
 
     const settleResult = await settleResponse.json() as { success: boolean; transaction?: string; errorReason?: string };
 
@@ -169,6 +171,7 @@ app.post('/api/wish', async (c) => {
     return c.json(response);
 
   } catch (err) {
+    console.error('Payment error:', err);
     return c.json<ErrorResponse>({ error: { code: 'PAYMENT_ERROR', message: 'Payment processing failed' } }, 500);
   }
 });

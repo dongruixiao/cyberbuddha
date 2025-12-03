@@ -115,6 +115,25 @@
       word-break: break-all;
     }
 
+    .x402 {
+      display: inline-block;
+      padding: 0 var(--spacing);
+      opacity: var(--opacity);
+    }
+
+    .bg-pattern.coin-flip .x402 {
+      animation: coinFlip 10s ease-in-out forwards;
+      animation-delay: calc(var(--delay) * 1s);
+    }
+
+    @keyframes coinFlip {
+      0% { transform: rotateY(0deg); filter: brightness(1); }
+      25% { transform: rotateY(270deg); filter: brightness(2); }
+      50% { transform: rotateY(540deg); filter: brightness(3); }
+      75% { transform: rotateY(810deg); filter: brightness(2); }
+      100% { transform: rotateY(1080deg); filter: brightness(1); }
+    }
+
     @keyframes glow {
       from { text-shadow: 0 0 10px var(--neon), 0 0 20px var(--neon); opacity: 0.8; }
       to { text-shadow: 0 0 20px var(--neon), 0 0 40px var(--neon), 0 0 60px var(--neon); opacity: 1; }
@@ -405,6 +424,8 @@
         const result = await makeWish(amount, dom.wish.value || undefined, network);
         setStatus(result.message, 'success');
         showBlessing(result.blessing);
+        // Coin flip animation
+        startCoinFlip();
         dom.wish.value = '';
       } catch (e) { setStatus(e.message, 'error'); }
       finally { dom.action.disabled = false; }
@@ -418,10 +439,31 @@
       setStatus('钱包已断开');
     });
 
-    // Generate background pattern
+    // Background pattern with spans for visual effect
     const bg = document.getElementById('bg');
-    const pattern = 'x402 '.repeat(500);
-    bg.textContent = pattern.repeat(50);
+
+    function generatePattern() {
+      const area = window.innerWidth * window.innerHeight;
+      const count = Math.floor(area / 800);
+      bg.innerHTML = Array(count).fill(0).map(() => {
+        const spacing = Math.random() * 20;
+        const opacity = 0.3 + Math.random() * 0.7;
+        const delay = Math.random() * 3;
+        return `<span class="x402" style="--spacing:${spacing}px;--opacity:${opacity};--delay:${delay}">x402</span>`;
+      }).join('');
+    }
+
+    function startCoinFlip() {
+      bg.classList.add('coin-flip');
+      setTimeout(() => bg.classList.remove('coin-flip'), 13000);
+    }
+
+    generatePattern();
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(generatePattern, 200);
+    });
 
     (async () => {
       try { state.config = await fetchConfig(); updateUI(); }

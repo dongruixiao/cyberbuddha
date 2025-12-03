@@ -4,8 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cyber Buddha - x402</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cn-fontsource-kxzd-regular/font.css">
   <style>
     :root {
+      --neon-start: #00ff88;
+      --neon-end: #00d4ff;
       --neon: #00ff88;
       --neon-dim: #00ff8866;
       --gold: #ffaa00;
@@ -26,7 +29,16 @@
       color: var(--neon);
     }
 
-    .header {
+    .header-left {
+      position: fixed;
+      top: 0;
+      left: 0;
+      padding: 12px 16px;
+      z-index: 100;
+      font-size: 10px;
+    }
+
+    .header-right {
       position: fixed;
       top: 0;
       right: 0;
@@ -35,39 +47,104 @@
       font-size: 10px;
     }
 
+    .msg-queue {
+      position: fixed;
+      bottom: 12px;
+      left: 16px;
+      z-index: 100;
+      font-size: 10px;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 4px;
+      max-width: 250px;
+    }
+
+    .msg-item {
+      opacity: 1;
+      transition: opacity 0.5s;
+      letter-spacing: 0.5px;
+    }
+
+    .msg-item.error { color: #ff4444; }
+    .msg-item.success { color: var(--neon); }
+
     .cursor { animation: blink 1s infinite; }
     @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
 
     .wallet-status {
-      display: none;
+      display: flex;
       align-items: center;
       gap: 8px;
-      color: var(--neon);
+      cursor: pointer;
+      animation: text-pulse 2s infinite;
+      transition: all 0.2s;
     }
-    .wallet-status.show { display: flex; }
+    .wallet-status:hover {
+      color: #889;
+    }
+    .wallet-status.connected {
+      color: var(--neon);
+      animation: none;
+    }
+    .wallet-status.connected:hover {
+      opacity: 0.7;
+    }
     .wallet-status::before {
       content: '';
       width: 6px;
       height: 6px;
-      background: var(--neon);
+      background: #445;
       border-radius: 50%;
+      animation: dot-pulse 2s infinite;
+    }
+    .wallet-status.connected::before {
+      background: var(--neon);
       box-shadow: 0 0 8px var(--neon);
       animation: pulse 2s infinite;
     }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-
-    .chain-select {
-      background: transparent;
-      border: 1px solid #334;
-      color: var(--gold);
-      font-family: inherit;
-      font-size: 10px;
-      padding: 4px 8px;
-      cursor: pointer;
-      outline: none;
+    @keyframes text-pulse {
+      0%, 100% { color: #334; }
+      50% { color: #667; }
     }
-    .chain-select:hover { border-color: var(--gold); }
-    .chain-select option { background: #111; color: var(--gold); }
+    @keyframes dot-pulse {
+      0%, 100% { background: #334; box-shadow: none; }
+      50% { background: #556; box-shadow: 0 0 4px #556; }
+    }
+
+    .chain-switcher {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      color: #556;
+      user-select: none;
+    }
+
+    .chain-arrow {
+      cursor: pointer;
+      padding: 2px 4px;
+      color: #445;
+      transition: all 0.15s;
+    }
+
+    .chain-arrow:hover {
+      color: var(--neon);
+      text-shadow: 0 0 8px var(--neon);
+    }
+
+    .chain-name {
+      color: #667;
+      letter-spacing: 1px;
+      min-width: 100px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .chain-name:hover {
+      color: var(--neon);
+    }
 
     .wallet-addr {
       font-size: 11px;
@@ -78,12 +155,77 @@
 
     .container { text-align: center; padding: 10px; }
 
+    .buddha-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .buddha-light {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle,
+        rgba(255, 215, 0, 0.4) 0%,
+        rgba(255, 170, 0, 0.25) 30%,
+        rgba(255, 136, 0, 0.15) 50%,
+        rgba(255, 100, 0, 0.05) 70%,
+        transparent 100%);
+      pointer-events: none;
+      opacity: 0;
+      z-index: -1;
+    }
+
+    .buddha-light.active {
+      animation: halo-burst 10s ease-out forwards;
+    }
+
+    @keyframes halo-burst {
+      0% {
+        width: 0;
+        height: 0;
+        opacity: 0;
+      }
+      2% {
+        opacity: 1;
+      }
+      8% {
+        width: 600px;
+        height: 600px;
+        opacity: 1;
+      }
+      80% {
+        opacity: 1;
+      }
+      100% {
+        width: 800px;
+        height: 800px;
+        opacity: 0;
+      }
+    }
+
     .buddha {
       font-size: 12px;
       line-height: 1.2;
       white-space: pre;
-      text-shadow: 0 0 10px var(--neon), 0 0 20px var(--neon);
-      animation: glow 2s ease-in-out infinite alternate;
+      background: linear-gradient(135deg,
+        #ff0080 0%,
+        #ff00ff 15%,
+        #8000ff 30%,
+        #00d4ff 45%,
+        #00ff88 60%,
+        #ffff00 75%,
+        #ff8000 90%,
+        #ff0080 100%);
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 8px #ff00ff) drop-shadow(0 0 15px #00d4ff);
+      animation: rainbow-flow 4s ease-in-out infinite;
       display: inline-block;
       text-align: left;
       user-select: none;
@@ -93,11 +235,22 @@
       font-size: 12px;
       margin-top: 12px;
       letter-spacing: 6px;
-      text-shadow: 0 0 10px var(--neon);
+      background: linear-gradient(90deg,
+        #00ff88 0%,
+        #00d4ff 25%,
+        #ff00ff 50%,
+        #ff0080 75%,
+        #ffff00 100%);
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 10px #00d4ff);
+      animation: rainbow-slide 3s linear infinite;
       user-select: none;
     }
 
-    .bg-pattern {
+    #bg-canvas {
       position: fixed;
       top: 0;
       left: 0;
@@ -105,38 +258,19 @@
       height: 100vh;
       z-index: -1;
       pointer-events: none;
-      opacity: 0.22;
-      font-size: 12px;
-      line-height: 1.6;
-      letter-spacing: 4px;
-      color: var(--gold);
-      overflow: hidden;
-      white-space: pre-wrap;
-      word-break: break-all;
     }
 
-    .x402 {
-      display: inline-block;
-      padding: 0 var(--spacing);
-      opacity: var(--opacity);
+    @keyframes rainbow-flow {
+      0% { background-position: 0% 0%; filter: drop-shadow(0 0 8px #ff0080) drop-shadow(0 0 15px #ff00ff); }
+      25% { background-position: 50% 50%; filter: drop-shadow(0 0 8px #8000ff) drop-shadow(0 0 15px #00d4ff); }
+      50% { background-position: 100% 100%; filter: drop-shadow(0 0 8px #00ff88) drop-shadow(0 0 15px #ffff00); }
+      75% { background-position: 50% 50%; filter: drop-shadow(0 0 8px #ff8000) drop-shadow(0 0 15px #ff0080); }
+      100% { background-position: 0% 0%; filter: drop-shadow(0 0 8px #ff0080) drop-shadow(0 0 15px #ff00ff); }
     }
 
-    .bg-pattern.coin-flip .x402 {
-      animation: coinFlip 10s ease-in-out forwards;
-      animation-delay: calc(var(--delay) * 1s);
-    }
-
-    @keyframes coinFlip {
-      0% { transform: rotateY(0deg); filter: brightness(1); }
-      25% { transform: rotateY(270deg); filter: brightness(2); }
-      50% { transform: rotateY(540deg); filter: brightness(3); }
-      75% { transform: rotateY(810deg); filter: brightness(2); }
-      100% { transform: rotateY(1080deg); filter: brightness(1); }
-    }
-
-    @keyframes glow {
-      from { text-shadow: 0 0 10px var(--neon), 0 0 20px var(--neon); opacity: 0.8; }
-      to { text-shadow: 0 0 20px var(--neon), 0 0 40px var(--neon), 0 0 60px var(--neon); opacity: 1; }
+    @keyframes rainbow-slide {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 200% 50%; }
     }
 
     .terminal {
@@ -211,50 +345,30 @@
     .btn.gold { border-color: var(--gold); color: var(--gold); }
     .btn.gold:hover { background: rgba(255, 170, 0, 0.1); box-shadow: 0 0 15px rgba(255, 170, 0, 0.3); }
 
-    .status { font-size: 10px; margin-top: 12px; min-height: 14px; opacity: 0.6; text-align: center; }
-    .status.error { color: #ff4444; opacity: 1; }
-    .status.success { color: var(--neon); opacity: 1; }
-
-    .blessing {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: var(--gold);
-      font-size: 24px;
-      text-shadow: 0 0 20px var(--gold), 0 0 40px var(--flame);
-      animation: pop 2s ease-out forwards;
-      pointer-events: none;
-      z-index: 1000;
-      white-space: nowrap;
-    }
-
-    @keyframes pop {
-      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-      20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-      80% { opacity: 1; transform: translate(-50%, -60%) scale(1); }
-      100% { opacity: 0; transform: translate(-50%, -70%) scale(0.8); }
-    }
   </style>
 </head>
 <body>
-  <div class="bg-pattern" id="bg"></div>
-  <div class="header">
-    <select class="chain-select" id="chain-select">
-      <option value="base-sepolia">Base Sepolia</option>
-      <option value="base">Base</option>
-      <option value="polygon-amoy">Polygon Amoy</option>
-      <option value="polygon">Polygon</option>
-      <option value="avalanche-fuji">Avalanche Fuji</option>
-      <option value="avalanche">Avalanche</option>
-    </select>
-    <div class="wallet-status" id="wallet-status">
-      <span class="wallet-addr" id="wallet"></span>
+  <canvas id="bg-canvas"></canvas>
+  <div class="header-left">
+    <div class="chain-switcher">
+      <span class="chain-arrow" id="chain-prev">&lt;</span>
+      <span class="chain-name" id="chain-name">base-sepolia</span>
+      <span class="chain-arrow" id="chain-next">&gt;</span>
     </div>
   </div>
 
+  <div class="header-right">
+    <div class="wallet-status" id="wallet-status">
+      <span class="wallet-addr" id="wallet">disconnected</span>
+    </div>
+  </div>
+
+  <div class="msg-queue" id="msg-queue"></div>
+
   <div class="container">
-    <pre class="buddha">                  _oo0oo_
+    <div class="buddha-wrapper">
+      <div class="buddha-light" id="buddha-light"></div>
+      <pre class="buddha">                  _oo0oo_
                  o8888888o
                  88" . "88
                  (| -_- |)
@@ -267,15 +381,16 @@
           | \_|  ''\---/''  |_/ |
           \  .-\__  '-'  ___/-. /
         ___'. .'  /--.--\  `. .'___
-     ."" '<  `.___\_<|>_/___.' >' "".
+     ."" '<  `.___\_<|>_/___.'  >' "".
     | | :  `- \`.;`\ _ /`;.`/ - ` : | |
     \  \ `_.   \_ __\ /__ _/   .-` /  /
 =====`-.____`.___ \_____/___.-`___.-'=====
                   `=---='
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-          佛祖保佑         永無BUG
+          佛祖保佑         永無 BUG
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</pre>
+    </div>
     <div class="title">C Y B E R _ B U D D H A</div>
 
     <div class="terminal">
@@ -284,7 +399,6 @@
       </div>
       <button class="ascii-btn" id="action">:: 点香 ::</button>
       <div class="hint">[ $ <input type="text" class="amount-inline" id="amount" value="1"> ]</div>
-      <div class="status" id="status"></div>
     </div>
   </div>
 
@@ -300,9 +414,68 @@
       'avalanche-fuji': { chainId: 43113 },
     };
 
-    const state = { address: null, chainId: null, config: null };
+    const CHAINS = ['base-sepolia', 'base', 'polygon-amoy', 'polygon', 'avalanche-fuji', 'avalanche'];
+    const state = { address: null, chainId: null, config: null, chainIndex: 0 };
     const $ = id => document.getElementById(id);
-    const dom = { wallet: $('wallet'), walletStatus: $('wallet-status'), chainSelect: $('chain-select'), wish: $('wish'), amount: $('amount'), action: $('action'), status: $('status') };
+    const dom = {
+      wallet: $('wallet'),
+      walletStatus: $('wallet-status'),
+      wish: $('wish'),
+      amount: $('amount'),
+      action: $('action'),
+      buddhaLight: $('buddha-light'),
+      chainName: $('chain-name'),
+      chainPrev: $('chain-prev'),
+      chainNext: $('chain-next'),
+      msgQueue: $('msg-queue')
+    };
+
+    // Message queue system
+    const MSG_MAX = 5;
+    const MSG_LIFETIME = 6000; // ms
+    const messages = [];
+
+    function addMessage(text, type = '') {
+      const msg = { text, type, id: Date.now(), el: null };
+      messages.unshift(msg);
+
+      // Remove oldest if over limit
+      while (messages.length > MSG_MAX) {
+        const old = messages.pop();
+        if (old.el) old.el.remove();
+      }
+
+      renderMessages();
+
+      // Auto fade out
+      setTimeout(() => {
+        const idx = messages.findIndex(m => m.id === msg.id);
+        if (idx !== -1) {
+          messages.splice(idx, 1);
+          renderMessages();
+        }
+      }, MSG_LIFETIME);
+    }
+
+    function renderMessages() {
+      dom.msgQueue.innerHTML = '';
+      messages.forEach((msg, i) => {
+        const el = document.createElement('div');
+        el.className = `msg-item ${msg.type}`;
+        // Newer = brighter, older = dimmer
+        const opacity = 1 - (i / MSG_MAX) * 0.6;
+        el.style.opacity = opacity;
+        el.textContent = msg.text;
+        msg.el = el;
+        dom.msgQueue.appendChild(el);
+      });
+    }
+
+    function triggerGoldenLight() {
+      dom.buddhaLight.classList.remove('active');
+      void dom.buddhaLight.offsetWidth;
+      dom.buddhaLight.classList.add('active');
+    }
 
     async function fetchConfig() {
       return (await fetch('/api/wish')).json();
@@ -383,91 +556,189 @@
     function updateUI() {
       if (state.address) {
         dom.wallet.textContent = `${state.address.slice(0, 6)}...${state.address.slice(-4)}`;
-        dom.walletStatus.classList.add('show');
+        dom.walletStatus.classList.add('connected');
       } else {
-        dom.walletStatus.classList.remove('show');
+        dom.wallet.textContent = 'disconnected';
+        dom.walletStatus.classList.remove('connected');
       }
     }
 
-    function setStatus(msg, type = '') { dom.status.innerHTML = msg; dom.status.className = `status ${type}`; }
-
-    function showBlessing(text) {
-      const el = document.createElement('div');
-      el.className = 'blessing';
-      el.textContent = text;
-      document.body.appendChild(el);
-      setTimeout(() => el.remove(), 2000);
+    // Chain switcher
+    function updateChainDisplay() {
+      dom.chainName.textContent = CHAINS[state.chainIndex];
     }
 
-    dom.action.addEventListener('click', async () => {
-      // Step 1: Connect wallet if needed
-      if (!state.address) {
+    dom.chainPrev.addEventListener('click', () => {
+      state.chainIndex = (state.chainIndex - 1 + CHAINS.length) % CHAINS.length;
+      updateChainDisplay();
+      addMessage(`switched to ${CHAINS[state.chainIndex]}`);
+    });
+
+    dom.chainNext.addEventListener('click', () => {
+      state.chainIndex = (state.chainIndex + 1) % CHAINS.length;
+      updateChainDisplay();
+      addMessage(`switched to ${CHAINS[state.chainIndex]}`);
+    });
+
+    // Wallet connect/disconnect on header click
+    dom.walletStatus.addEventListener('click', async () => {
+      if (state.address) {
+        state.address = null;
+        state.chainId = null;
+        updateUI();
+        addMessage('wallet disconnected');
+      } else {
         try {
-          dom.action.disabled = true;
-          setStatus('连接钱包...');
+          addMessage('connecting...');
           await connectWallet();
           updateUI();
-          setStatus('钱包已连接，再次点击点香', 'success');
-        } catch (e) { setStatus(e.message, 'error'); }
-        finally { dom.action.disabled = false; }
+          addMessage('wallet connected', 'success');
+        } catch (e) { addMessage(e.message, 'error'); }
+      }
+    });
+
+    // Make wish on action button click
+    dom.action.addEventListener('click', async () => {
+      if (!state.address) {
+        addMessage('please connect wallet first', 'error');
         return;
       }
 
-      // Step 2: Make wish
       const amount = dom.amount.value;
-      if (!amount || parseFloat(amount) < 0.01) { setStatus('最小金额 $0.01', 'error'); return; }
+      if (!amount || parseFloat(amount) < 0.01) { addMessage('min amount $0.01', 'error'); return; }
 
       try {
         dom.action.disabled = true;
-        setStatus('准备支付...');
-        const network = dom.chainSelect.value;
+        addMessage('preparing payment...');
+        const network = CHAINS[state.chainIndex];
         const result = await makeWish(amount, dom.wish.value || undefined, network);
-        setStatus(result.message, 'success');
-        showBlessing(result.blessing);
-        // Coin flip animation
+        addMessage(result.message, 'success');
+        // Golden light + coin flip animation (flips to 1024 at the end)
+        triggerGoldenLight();
         startCoinFlip();
         dom.wish.value = '';
-      } catch (e) { setStatus(e.message, 'error'); }
+      } catch (e) { addMessage(e.message, 'error'); }
       finally { dom.action.disabled = false; }
     });
 
-    // Disconnect wallet on click
-    dom.wallet.addEventListener('click', () => {
-      state.address = null;
-      state.chainId = null;
-      updateUI();
-      setStatus('钱包已断开');
-    });
+    // Canvas background - same visual effect, much better performance
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let items = [];
+    let animating = false;
+    let animationStart = 0;
+    let flippedTo1024 = false; // After flip animation, some items become 1024
+    const ANIMATION_DURATION = 10; // seconds
+    const MAX_DELAY = 3; // seconds
 
-    // Background pattern with spans for visual effect
-    const bg = document.getElementById('bg');
+    function initCanvas() {
+      canvas.width = window.innerWidth * devicePixelRatio;
+      canvas.height = window.innerHeight * devicePixelRatio;
+      ctx.scale(devicePixelRatio, devicePixelRatio);
 
-    function generatePattern() {
-      const area = window.innerWidth * window.innerHeight;
-      const count = Math.floor(area / 800);
-      bg.innerHTML = Array(count).fill(0).map(() => {
-        const spacing = Math.random() * 20;
-        const opacity = 0.3 + Math.random() * 0.7;
-        const delay = Math.random() * 3;
-        return `<span class="x402" style="--spacing:${spacing}px;--opacity:${opacity};--delay:${delay}">x402</span>`;
-      }).join('');
+      // Generate items matching the CSS version layout
+      items = [];
+      const text = 'x402';
+      ctx.font = '12px Courier New';
+      const textWidth = ctx.measureText(text).width;
+
+      let x = 0, y = 0;
+      const lineHeight = 12 * 1.6;
+
+      while (y < window.innerHeight + lineHeight) {
+        x = (Math.random() - 0.5) * 50; // Random start offset
+        while (x < window.innerWidth + 50) {
+          const spacing = Math.random() * 30;
+          items.push({
+            x: x + (Math.random() - 0.5) * 12,
+            y: y + (Math.random() - 0.5) * 10,
+            baseOpacity: 0.22 * (0.25 + Math.random() * 0.75),
+            delay: Math.random() * MAX_DELAY,
+            is1024: Math.random() < 0.5 // 50% chance to be 1024 after flip
+          });
+          x += textWidth + 4 + spacing;
+        }
+        y += lineHeight;
+      }
+
+      drawFrame();
+    }
+
+    // Easing function to match CSS ease-in-out
+    function easeInOut(t) {
+      return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    }
+
+    function drawFrame(timestamp) {
+      ctx.clearRect(0, 0, canvas.width / devicePixelRatio, canvas.height / devicePixelRatio);
+      ctx.font = '12px Courier New';
+      ctx.textBaseline = 'top';
+
+      const elapsed = animating ? (timestamp - animationStart) / 1000 : 0;
+
+      for (const item of items) {
+        let opacity = item.baseOpacity;
+        let scaleX = 1;
+        // After animation: show mixed x402/1024 based on item.is1024
+        let text = (flippedTo1024 && item.is1024) ? '1024' : 'x402';
+
+        if (animating) {
+          const itemTime = elapsed - item.delay;
+          if (itemTime > 0 && itemTime < ANIMATION_DURATION) {
+            // Apply easing
+            const progress = easeInOut(itemTime / ANIMATION_DURATION);
+            // 1 full rotation (360 deg = 2π)
+            const angle = progress * Math.PI * 2;
+            scaleX = Math.cos(angle);
+            // Brightness: peaks at middle, matches CSS filter brightness
+            const brightness = 1 + 2 * Math.sin(progress * Math.PI);
+            opacity = item.baseOpacity * brightness;
+            // Show 1024 on back side for items marked as 1024
+            if (scaleX < 0 && item.is1024) {
+              text = '1024';
+            }
+          } else if (itemTime >= ANIMATION_DURATION && item.is1024) {
+            // Animation done for this item
+            text = '1024';
+          }
+        }
+
+        // Draw with transform
+        ctx.save();
+        ctx.translate(item.x + 15, item.y);
+        ctx.scale(Math.abs(scaleX), 1); // Use abs to prevent mirror
+        ctx.fillStyle = `rgba(255, 170, 0, ${Math.min(opacity, 1)})`;
+        ctx.fillText(text, -15, 0);
+        ctx.restore();
+      }
+
+      if (animating && elapsed < ANIMATION_DURATION + MAX_DELAY) {
+        requestAnimationFrame(drawFrame);
+      } else if (animating) {
+        animating = false;
+        flippedTo1024 = true;
+        drawFrame(); // Final static frame with mixed x402/1024
+      }
     }
 
     function startCoinFlip() {
-      bg.classList.add('coin-flip');
-      setTimeout(() => bg.classList.remove('coin-flip'), 13000);
+      // Randomize which items will flip to 1024
+      items.forEach(item => item.is1024 = Math.random() < 0.5);
+      animating = true;
+      animationStart = performance.now();
+      requestAnimationFrame(drawFrame);
     }
 
-    generatePattern();
+    initCanvas();
     let resizeTimeout;
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(generatePattern, 200);
+      resizeTimeout = setTimeout(initCanvas, 200);
     });
 
     (async () => {
-      try { state.config = await fetchConfig(); updateUI(); }
-      catch { setStatus('加载失败', 'error'); }
+      try { state.config = await fetchConfig(); updateUI(); updateChainDisplay(); }
+      catch { addMessage('failed to load config', 'error'); }
     })();
   </script>
 </body>

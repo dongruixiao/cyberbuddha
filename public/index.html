@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cyber Buddha - x402</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cn-fontsource-kxzd-regular/font.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&family=Noto+Serif+SC:wght@200;300&display=swap">
   <style>
     :root {
       --neon-start: #00ff88;
@@ -63,10 +64,11 @@
       opacity: 1;
       transition: opacity 0.5s;
       letter-spacing: 0.5px;
+      color: #00ff88;
     }
 
     .msg-item.error { color: #ff4444; }
-    .msg-item.success { color: var(--neon); }
+    .msg-item.success { color: #00ff88; }
 
     .cursor { animation: blink 1s infinite; }
     @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
@@ -76,74 +78,98 @@
       align-items: center;
       gap: 8px;
       cursor: pointer;
-      animation: text-pulse 2s infinite;
+      color: rgba(255, 170, 0, 0.6);
       transition: all 0.2s;
     }
     .wallet-status:hover {
-      color: #889;
+      color: var(--gold);
+      text-shadow: 0 0 6px var(--gold);
     }
     .wallet-status.connected {
-      color: var(--neon);
-      animation: none;
+      color: rgba(0, 255, 136, 0.8);
     }
     .wallet-status.connected:hover {
-      opacity: 0.7;
+      color: var(--neon);
+      text-shadow: 0 0 6px var(--neon);
     }
     .wallet-status::before {
       content: '';
       width: 6px;
       height: 6px;
-      background: #445;
       border-radius: 50%;
-      animation: dot-pulse 2s infinite;
+      animation: dot-pulse-gold 3s ease-in-out infinite;
     }
     .wallet-status.connected::before {
-      background: var(--neon);
-      box-shadow: 0 0 8px var(--neon);
-      animation: pulse 2s infinite;
+      animation: dot-pulse-green 3s ease-in-out infinite;
     }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-    @keyframes text-pulse {
-      0%, 100% { color: #334; }
-      50% { color: #667; }
+    @keyframes dot-pulse-gold {
+      0%, 100% { background: rgba(255, 170, 0, 0.35); box-shadow: 0 0 4px rgba(255, 170, 0, 0.2); }
+      50% { background: rgba(255, 170, 0, 0.85); box-shadow: 0 0 8px rgba(255, 170, 0, 0.5); }
     }
-    @keyframes dot-pulse {
-      0%, 100% { background: #334; box-shadow: none; }
-      50% { background: #556; box-shadow: 0 0 4px #556; }
+    @keyframes dot-pulse-green {
+      0%, 100% { background: rgba(0, 255, 136, 0.5); box-shadow: 0 0 6px rgba(0, 255, 136, 0.3); }
+      50% { background: rgba(0, 255, 136, 1); box-shadow: 0 0 10px rgba(0, 255, 136, 0.7); }
     }
 
     .chain-switcher {
-      display: flex;
+      display: none;
       align-items: center;
       gap: 4px;
       font-size: 10px;
-      color: #556;
       user-select: none;
+    }
+    .chain-switcher.connected {
+      display: flex;
     }
 
     .chain-arrow {
       cursor: pointer;
       padding: 2px 4px;
-      color: #445;
       transition: all 0.15s;
+      animation: arrow-pulse-gold 3s ease-in-out infinite;
+    }
+    .chain-switcher.connected .chain-arrow {
+      animation: arrow-pulse-green 3s ease-in-out infinite;
+    }
+    @keyframes arrow-pulse-gold {
+      0%, 100% { color: rgba(255, 170, 0, 0.25); }
+      50% { color: rgba(255, 170, 0, 0.6); }
+    }
+    @keyframes arrow-pulse-green {
+      0%, 100% { color: rgba(0, 255, 136, 0.4); }
+      50% { color: rgba(0, 255, 136, 0.8); }
     }
 
     .chain-arrow:hover {
+      color: var(--gold);
+      text-shadow: 0 0 8px var(--gold);
+      animation: none;
+    }
+    .chain-switcher.connected .chain-arrow:hover {
       color: var(--neon);
       text-shadow: 0 0 8px var(--neon);
+      animation: none;
     }
 
     .chain-name {
-      color: #667;
       letter-spacing: 1px;
       min-width: 100px;
       text-align: center;
       cursor: pointer;
       transition: all 0.15s;
+      color: rgba(255, 170, 0, 0.55);
+    }
+    .chain-switcher.connected .chain-name {
+      color: rgba(0, 255, 136, 0.7);
     }
 
     .chain-name:hover {
+      color: var(--gold);
+      text-shadow: 0 0 6px var(--gold);
+    }
+    .chain-switcher.connected .chain-name:hover {
       color: var(--neon);
+      text-shadow: 0 0 6px var(--neon);
     }
 
     .wallet-addr {
@@ -152,6 +178,99 @@
       cursor: pointer;
     }
     .wallet-addr:hover { opacity: 0.7; }
+
+    /* Wallet Modal */
+    .wallet-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .wallet-modal.show {
+      display: flex;
+    }
+    .wallet-modal-content {
+      background: #111;
+      border: 1px solid rgba(255, 170, 0, 0.3);
+      padding: 24px;
+      min-width: 280px;
+      box-shadow: 0 0 30px rgba(255, 170, 0, 0.1);
+    }
+    .wallet-modal-title {
+      color: var(--gold);
+      font-size: 12px;
+      margin-bottom: 20px;
+      text-align: center;
+      letter-spacing: 2px;
+    }
+    .wallet-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      border: 1px solid rgba(255, 170, 0, 0.2);
+      cursor: pointer;
+      transition: all 0.2s;
+      color: rgba(255, 170, 0, 0.6);
+      font-size: 11px;
+      letter-spacing: 1px;
+    }
+    .wallet-option:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(255, 170, 0, 0.05);
+      box-shadow: 0 0 15px rgba(255, 170, 0, 0.1);
+    }
+    .wallet-option.disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    .wallet-option.disabled:hover {
+      border-color: rgba(255, 170, 0, 0.2);
+      color: rgba(255, 170, 0, 0.6);
+      background: transparent;
+      box-shadow: none;
+    }
+    .wallet-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .wallet-modal-divider {
+      height: 1px;
+      background: rgba(255, 170, 0, 0.25);
+      margin: 16px 0;
+    }
+    .network-toggle {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+    .network-opt {
+      color: rgba(255, 170, 0, 0.35);
+      font-size: 10px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      padding: 4px 12px;
+      transition: all 0.2s;
+    }
+    .network-opt:hover {
+      color: rgba(255, 170, 0, 0.6);
+    }
+    .network-opt.selected {
+      color: var(--gold);
+      text-shadow: 0 0 6px rgba(255, 170, 0, 0.4);
+    }
 
     .container { text-align: center; padding: 10px; }
 
@@ -169,13 +288,41 @@
       height: 0;
       border-radius: 50%;
       background: radial-gradient(circle,
-        rgba(255, 215, 0, 0.4) 0%,
-        rgba(255, 170, 0, 0.25) 30%,
-        rgba(255, 136, 0, 0.15) 50%,
-        rgba(255, 100, 0, 0.05) 70%,
-        transparent 100%);
+        rgba(255, 215, 0, 0.3) 0%,
+        rgba(255, 170, 0, 0.15) 40%,
+        transparent 70%);
       pointer-events: none;
       opacity: 0;
+      z-index: -1;
+    }
+
+    /* 法轮 Canvas */
+    #dharma-canvas {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* 梵音波纹 Canvas */
+    #ripple-canvas {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* 莲花绽放 Canvas */
+    #lotus-canvas {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
       z-index: -1;
     }
 
@@ -189,20 +336,20 @@
         height: 0;
         opacity: 0;
       }
-      2% {
+      5% {
         opacity: 1;
       }
-      8% {
-        width: 600px;
-        height: 600px;
+      25% {
+        width: 900px;
+        height: 900px;
         opacity: 1;
       }
       80% {
         opacity: 1;
       }
       100% {
-        width: 800px;
-        height: 800px;
+        width: 1100px;
+        height: 1100px;
         opacity: 0;
       }
     }
@@ -216,7 +363,7 @@
         #ff00ff 15%,
         #8000ff 30%,
         #00d4ff 45%,
-        #00ff88 60%,
+        #bf00ff 60%,
         #ffff00 75%,
         #ff8000 90%,
         #ff0080 100%);
@@ -236,7 +383,7 @@
       margin-top: 12px;
       letter-spacing: 6px;
       background: linear-gradient(90deg,
-        #00ff88 0%,
+        #bf00ff 0%,
         #00d4ff 25%,
         #ff00ff 50%,
         #ff0080 75%,
@@ -250,7 +397,7 @@
       user-select: none;
     }
 
-    #bg-canvas {
+    #bg-container {
       position: fixed;
       top: 0;
       left: 0;
@@ -260,10 +407,14 @@
       pointer-events: none;
     }
 
+    #bg-container canvas {
+      display: block;
+    }
+
     @keyframes rainbow-flow {
       0% { background-position: 0% 0%; filter: drop-shadow(0 0 8px #ff0080) drop-shadow(0 0 15px #ff00ff); }
       25% { background-position: 50% 50%; filter: drop-shadow(0 0 8px #8000ff) drop-shadow(0 0 15px #00d4ff); }
-      50% { background-position: 100% 100%; filter: drop-shadow(0 0 8px #00ff88) drop-shadow(0 0 15px #ffff00); }
+      50% { background-position: 100% 100%; filter: drop-shadow(0 0 8px #bf00ff) drop-shadow(0 0 15px #ffff00); }
       75% { background-position: 50% 50%; filter: drop-shadow(0 0 8px #ff8000) drop-shadow(0 0 15px #ff0080); }
       100% { background-position: 0% 0%; filter: drop-shadow(0 0 8px #ff0080) drop-shadow(0 0 15px #ff00ff); }
     }
@@ -281,7 +432,7 @@
     .wish-input {
       background: transparent;
       border: none;
-      border-bottom: 1px solid var(--neon-dim);
+      border-bottom: 1px solid rgba(0, 255, 136, 0.4);
       color: var(--neon);
       font-family: inherit;
       font-size: 14px;
@@ -291,7 +442,7 @@
       text-align: center;
       text-shadow: 0 0 8px var(--neon);
     }
-    .wish-input:focus { border-color: var(--neon); }
+    .wish-input:focus { border-color: #00ff88; }
     .wish-input::placeholder { color: #667; text-shadow: none; }
 
     .hint {
@@ -312,6 +463,31 @@
       outline: none;
     }
     .amount-inline:focus { color: var(--gold); border-color: var(--gold); }
+
+    .amount-select {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .amount-opt {
+      color: #556;
+      cursor: pointer;
+      padding: 4px 8px;
+      transition: all 0.2s;
+      font-size: 11px;
+    }
+
+    .amount-opt:hover {
+      color: var(--gold);
+      text-shadow: 0 0 10px var(--gold), 0 0 20px rgba(255, 170, 0, 0.4);
+    }
+
+    .amount-opt.selected {
+      color: var(--gold);
+      text-shadow: 0 0 8px var(--gold), 0 0 15px rgba(255, 170, 0, 0.3);
+    }
 
     .ascii-btn {
       margin-top: 18px;
@@ -340,7 +516,7 @@
       transition: all 0.3s;
     }
 
-    .btn:hover { background: rgba(0, 255, 136, 0.1); box-shadow: 0 0 15px rgba(0, 255, 136, 0.3); }
+    .btn:hover { background: rgba(191, 0, 255, 0.1); box-shadow: 0 0 15px rgba(191, 0, 255, 0.3); }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn.gold { border-color: var(--gold); color: var(--gold); }
     .btn.gold:hover { background: rgba(255, 170, 0, 0.1); box-shadow: 0 0 15px rgba(255, 170, 0, 0.3); }
@@ -348,30 +524,53 @@
   </style>
 </head>
 <body>
-  <canvas id="bg-canvas"></canvas>
+  <div id="bg-container"></div>
   <div class="header-left">
-    <div class="chain-switcher">
-      <span class="chain-arrow" id="chain-prev">&lt;</span>
-      <span class="chain-name" id="chain-name">base-sepolia</span>
-      <span class="chain-arrow" id="chain-next">&gt;</span>
+    <div class="chain-switcher" id="chain-switcher">
+      <span class="chain-arrow" id="chain-prev">«</span>
+      <span class="chain-name" id="chain-name">base</span>
+      <span class="chain-arrow" id="chain-next">»</span>
     </div>
   </div>
 
   <div class="header-right">
     <div class="wallet-status" id="wallet-status">
-      <span class="wallet-addr" id="wallet">disconnected</span>
+      <span class="wallet-addr" id="wallet">connect wallet</span>
     </div>
   </div>
 
   <div class="msg-queue" id="msg-queue"></div>
 
+  <!-- Wallet Selection Modal -->
+  <div class="wallet-modal" id="wallet-modal">
+    <div class="wallet-modal-content">
+      <div class="wallet-modal-title">:: SELECT WALLET ::</div>
+      <div class="wallet-option" id="opt-metamask" data-wallet="metamask">
+        <span class="wallet-icon">🦊</span>
+        <span>MetaMask</span>
+      </div>
+      <div class="wallet-option" id="opt-phantom" data-wallet="phantom">
+        <span class="wallet-icon">👻</span>
+        <span>Phantom</span>
+      </div>
+      <div class="wallet-modal-divider"></div>
+      <div class="network-toggle">
+        <span class="network-opt selected" data-network="mainnet">[ mainnet ]</span>
+        <span class="network-opt" data-network="testnet">[ testnet ]</span>
+      </div>
+    </div>
+  </div>
+
   <div class="container">
     <div class="buddha-wrapper">
+      <canvas id="dharma-canvas" width="900" height="900"></canvas>
+      <canvas id="ripple-canvas" width="900" height="900"></canvas>
+      <canvas id="lotus-canvas" width="900" height="900"></canvas>
       <div class="buddha-light" id="buddha-light"></div>
       <pre class="buddha">                  _oo0oo_
                  o8888888o
                  88" . "88
-                 (| -_- |)
+                (|  -_-  |)
                  0\  =  /0
                ___/`---'\___
              .' \\|     |// '.
@@ -395,12 +594,20 @@
 
     <div class="terminal">
       <div class="wish-line">
-        <input type="text" class="wish-input" id="wish" placeholder="写下你的愿望..." maxlength="100">
+        <input type="text" class="wish-input" id="wish" placeholder="ping buddha..." maxlength="100">
       </div>
-      <button class="ascii-btn" id="action">:: 点香 ::</button>
-      <div class="hint">[ $ <input type="text" class="amount-inline" id="amount" value="1"> ]</div>
+      <div class="amount-select" id="amount-select">
+        <span class="amount-opt" data-amount="1.024">$1.024</span>
+        <span class="amount-opt selected" data-amount="10.24">$10.24</span>
+        <span class="amount-opt" data-amount="102.4">$102.4</span>
+        <span class="amount-opt" data-amount="1024">$1024</span>
+      </div>
+      <button class="ascii-btn" id="action">:: BLESS ::</button>
     </div>
   </div>
+
+  <!-- PixiJS for GPU-accelerated rendering -->
+  <script src="https://pixijs.download/v8.6.6/pixi.min.js"></script>
 
   <script type="module">
     import { createWalletClient, custom, getAddress } from 'https://esm.sh/viem@2.21.0';
@@ -414,21 +621,74 @@
       'avalanche-fuji': { chainId: 43113 },
     };
 
-    const CHAINS = ['base-sepolia', 'base', 'polygon-amoy', 'polygon', 'avalanche-fuji', 'avalanche'];
-    const state = { address: null, chainId: null, config: null, chainIndex: 0 };
+    const MAINNET_CHAINS = ['base', 'polygon', 'avalanche'];
+    const TESTNET_CHAINS = ['base-sepolia', 'polygon-amoy', 'avalanche-fuji'];
+    const AMOUNTS = [1.024, 10.24, 102.4, 1024];
+    const state = { address: null, chainId: null, config: null, chainIndex: 0, selectedAmount: 10.24, walletType: null, networkType: 'mainnet' };
+
+    function getChains() {
+      return state.networkType === 'mainnet' ? MAINNET_CHAINS : TESTNET_CHAINS;
+    }
     const $ = id => document.getElementById(id);
     const dom = {
       wallet: $('wallet'),
       walletStatus: $('wallet-status'),
       wish: $('wish'),
-      amount: $('amount'),
+      amountSelect: $('amount-select'),
       action: $('action'),
       buddhaLight: $('buddha-light'),
+      dharmaCanvas: $('dharma-canvas'),
+      rippleCanvas: $('ripple-canvas'),
+      lotusCanvas: $('lotus-canvas'),
       chainName: $('chain-name'),
       chainPrev: $('chain-prev'),
       chainNext: $('chain-next'),
-      msgQueue: $('msg-queue')
+      chainSwitcher: $('chain-switcher'),
+      msgQueue: $('msg-queue'),
+      walletModal: $('wallet-modal'),
+      optMetamask: $('opt-metamask'),
+      optPhantom: $('opt-phantom'),
+      networkToggle: document.querySelectorAll('.network-opt')
     };
+
+    // Wallet providers
+    function getProvider(walletType) {
+      if (walletType === 'metamask') {
+        return window.ethereum?.isMetaMask ? window.ethereum : null;
+      } else if (walletType === 'phantom') {
+        return window.phantom?.ethereum;
+      }
+      return null;
+    }
+
+    function detectWallets() {
+      const hasMetaMask = !!window.ethereum?.isMetaMask;
+      const hasPhantom = !!window.phantom?.ethereum;
+
+      dom.optMetamask.classList.toggle('disabled', !hasMetaMask);
+      dom.optPhantom.classList.toggle('disabled', !hasPhantom);
+
+      if (!hasMetaMask) dom.optMetamask.title = 'MetaMask not installed';
+      if (!hasPhantom) dom.optPhantom.title = 'Phantom not installed';
+    }
+
+    function showWalletModal() {
+      detectWallets();
+      dom.walletModal.classList.add('show');
+    }
+
+    function hideWalletModal() {
+      dom.walletModal.classList.remove('show');
+    }
+
+    // Amount selection
+    dom.amountSelect.addEventListener('click', (e) => {
+      const opt = e.target.closest('.amount-opt');
+      if (!opt) return;
+      dom.amountSelect.querySelectorAll('.amount-opt').forEach(el => el.classList.remove('selected'));
+      opt.classList.add('selected');
+      state.selectedAmount = parseFloat(opt.dataset.amount);
+    });
 
     // Message queue system
     const MSG_MAX = 5;
@@ -471,10 +731,410 @@
       });
     }
 
-    function triggerGoldenLight() {
-      dom.buddhaLight.classList.remove('active');
-      void dom.buddhaLight.offsetWidth;
-      dom.buddhaLight.classList.add('active');
+    // 法轮 - 梵文/佛经文字旋转
+    const dharmaCtx = dom.dharmaCanvas.getContext('2d');
+    const DHARMA_SIZE = 900;
+    const DHARMA_CENTER = DHARMA_SIZE / 2;
+    let dharmaAnimating = false;
+    let dharmaStart = 0;
+    const DHARMA_DURATION = 10000;
+
+    // 梵文/佛经文字
+    const SUTRAS = [
+      'ॐ', 'मणि', 'पद्मे', 'हूँ',
+      '南無阿彌陀佛', '般若波羅蜜多', '色即是空', '空即是色',
+      '觀自在', '菩提', '涅槃', '因果', '輪迴', '解脫',
+      '慈悲', '智慧', '功德', '福報', '業障', '清淨',
+      '唵', '嘛', '呢', '叭', '咪', '吽',
+      'अ', 'आ', 'इ', 'ई', 'उ', 'ऊ',
+      '卍', '☸', '࿕', '࿖',
+    ];
+
+    // 生成多圈文字 - 内小外大
+    const dharmaRings = [];
+    const ringCount = 6;
+    for (let r = 0; r < ringCount; r++) {
+      const radius = 80 + r * 55; // 内外圈间隙更小
+      const fontSize = 14 + r * 4; // 内圈14px，外圈34px
+      const circumference = 2 * Math.PI * radius;
+      const charCount = Math.floor(circumference / (fontSize * 3.2)); // 同圈内间距更大避免重叠
+      const speed = (r % 2 === 0 ? 1 : -1) * (0.15 + r * 0.03);
+      const ring = { radius, speed, fontSize, chars: [] };
+      for (let i = 0; i < charCount; i++) {
+        ring.chars.push({
+          text: SUTRAS[Math.floor(Math.random() * SUTRAS.length)],
+          angle: (i / charCount) * Math.PI * 2,
+          opacity: 0.4 + Math.random() * 0.4
+        });
+      }
+      dharmaRings.push(ring);
+    }
+
+    function drawDharmaWheel(timestamp) {
+      const elapsed = timestamp - dharmaStart;
+      const progress = Math.min(elapsed / DHARMA_DURATION, 1);
+
+      // Fade in then out
+      let opacity = 1;
+      if (progress < 0.1) {
+        opacity = progress / 0.1;
+      } else if (progress > 0.8) {
+        opacity = (1 - progress) / 0.2;
+      }
+
+      dharmaCtx.clearRect(0, 0, DHARMA_SIZE, DHARMA_SIZE);
+
+      if (opacity <= 0) {
+        dharmaAnimating = false;
+        return;
+      }
+
+      dharmaCtx.save();
+      dharmaCtx.globalAlpha = opacity;
+
+      // 绘制每圈文字
+      for (const ring of dharmaRings) {
+        const rotation = (elapsed / 1000) * ring.speed;
+
+        for (const char of ring.chars) {
+          const angle = char.angle + rotation;
+          const x = DHARMA_CENTER + Math.cos(angle) * ring.radius;
+          const y = DHARMA_CENTER + Math.sin(angle) * ring.radius;
+
+          dharmaCtx.save();
+          dharmaCtx.translate(x, y);
+          dharmaCtx.rotate(angle + Math.PI / 2);
+
+          // 金色发光文字 - 细体古风字体
+          dharmaCtx.font = `300 ${ring.fontSize}px "ZCOOL XiaoWei", "Noto Serif SC", serif`;
+          dharmaCtx.textAlign = 'center';
+          dharmaCtx.textBaseline = 'middle';
+          dharmaCtx.fillStyle = `rgba(200, 160, 50, ${char.opacity * 0.6})`;
+          dharmaCtx.shadowColor = 'rgba(180, 140, 30, 0.4)';
+          dharmaCtx.shadowBlur = 5;
+          dharmaCtx.fillText(char.text, 0, 0);
+
+          dharmaCtx.restore();
+        }
+      }
+
+      dharmaCtx.restore();
+
+      if (dharmaAnimating) {
+        requestAnimationFrame(drawDharmaWheel);
+      }
+    }
+
+    function startDharmaWheel(level) {
+      // level: 1=小, 2=中, 3=大, 4=最大
+      // 重新随机文字，根据等级调整亮度
+      const brightnessMultiplier = 0.6 + level * 0.15;
+      for (const ring of dharmaRings) {
+        for (const char of ring.chars) {
+          char.text = SUTRAS[Math.floor(Math.random() * SUTRAS.length)];
+          char.opacity = (0.3 + Math.random() * 0.5) * brightnessMultiplier;
+        }
+      }
+      dharmaAnimating = true;
+      dharmaStart = performance.now();
+      requestAnimationFrame(drawDharmaWheel);
+    }
+
+    // ========== 梵音波纹 ==========
+    const rippleCtx = dom.rippleCanvas.getContext('2d');
+    const RIPPLE_SIZE = 900;
+    const RIPPLE_CENTER = RIPPLE_SIZE / 2;
+    let rippleAnimating = false;
+    let rippleStart = 0;
+    const RIPPLE_DURATION = 10000;
+
+    // 波纹咒语
+    const MANTRAS = ['ॐ', 'मणि', 'पद्मे', 'हूँ', '唵', '嘛', '呢', '叭', '咪', '吽'];
+
+    // 波纹数据
+    let ripples = [];
+
+    function initRipples() {
+      ripples = [];
+      // 创建5圈波纹，每圈携带咒语
+      for (let i = 0; i < 5; i++) {
+        const mantraCount = 6 + i * 2; // 内圈少，外圈多
+        const chars = [];
+        for (let j = 0; j < mantraCount; j++) {
+          chars.push({
+            text: MANTRAS[Math.floor(Math.random() * MANTRAS.length)],
+            angle: (j / mantraCount) * Math.PI * 2 + Math.random() * 0.2,
+            opacity: 0.5 + Math.random() * 0.3
+          });
+        }
+        ripples.push({
+          startRadius: 50,
+          maxRadius: 350,
+          delay: i * 400, // 每圈延迟
+          chars,
+          speed: 0.08 + Math.random() * 0.02
+        });
+      }
+    }
+
+    function drawRipples(timestamp) {
+      const elapsed = timestamp - rippleStart;
+      rippleCtx.clearRect(0, 0, RIPPLE_SIZE, RIPPLE_SIZE);
+
+      let anyActive = false;
+
+      for (const ripple of ripples) {
+        const rippleTime = elapsed - ripple.delay;
+        if (rippleTime < 0) {
+          anyActive = true;
+          continue;
+        }
+        if (rippleTime > RIPPLE_DURATION) continue;
+
+        anyActive = true;
+        const progress = rippleTime / RIPPLE_DURATION;
+
+        // 波纹扩散
+        const radius = ripple.startRadius + (ripple.maxRadius - ripple.startRadius) * progress;
+
+        // 淡入淡出
+        let alpha = 1;
+        if (progress < 0.1) alpha = progress / 0.1;
+        else if (progress > 0.7) alpha = (1 - progress) / 0.3;
+
+        // 绘制波纹圆环
+        rippleCtx.beginPath();
+        rippleCtx.arc(RIPPLE_CENTER, RIPPLE_CENTER, radius, 0, Math.PI * 2);
+        rippleCtx.strokeStyle = `rgba(180, 150, 80, ${alpha * 0.3})`;
+        rippleCtx.lineWidth = 2;
+        rippleCtx.stroke();
+
+        // 绘制波纹上的咒语
+        const rotation = (rippleTime / 1000) * ripple.speed;
+        for (const char of ripple.chars) {
+          const angle = char.angle + rotation;
+          const x = RIPPLE_CENTER + Math.cos(angle) * radius;
+          const y = RIPPLE_CENTER + Math.sin(angle) * radius;
+
+          rippleCtx.save();
+          rippleCtx.translate(x, y);
+          rippleCtx.rotate(angle + Math.PI / 2);
+
+          const fontSize = 14 + progress * 6; // 随扩散变大
+          rippleCtx.font = `300 ${fontSize}px "ZCOOL XiaoWei", serif`;
+          rippleCtx.textAlign = 'center';
+          rippleCtx.textBaseline = 'middle';
+          rippleCtx.fillStyle = `rgba(200, 170, 80, ${alpha * char.opacity})`;
+          rippleCtx.shadowColor = 'rgba(180, 140, 30, 0.3)';
+          rippleCtx.shadowBlur = 4;
+          rippleCtx.fillText(char.text, 0, 0);
+
+          rippleCtx.restore();
+        }
+      }
+
+      if (anyActive && rippleAnimating) {
+        requestAnimationFrame(drawRipples);
+      } else {
+        rippleAnimating = false;
+      }
+    }
+
+    function startRipples(level) {
+      initRipples();
+      // 根据等级调整亮度
+      const brightnessMultiplier = 0.7 + level * 0.1;
+      for (const ripple of ripples) {
+        for (const char of ripple.chars) {
+          char.opacity *= brightnessMultiplier;
+        }
+      }
+      rippleAnimating = true;
+      rippleStart = performance.now();
+      requestAnimationFrame(drawRipples);
+    }
+
+    // ========== 莲花绽放 ==========
+    const lotusCtx = dom.lotusCanvas.getContext('2d');
+    const LOTUS_SIZE = 900;
+    const LOTUS_CENTER = LOTUS_SIZE / 2;
+    let lotusAnimating = false;
+    let lotusStart = 0;
+    const LOTUS_DURATION = 10000;
+
+    // 梵文种子字
+    const LOTUS_CHARS = ['ॐ', 'अ', 'आ', 'इ', 'ई', 'उ', 'ऊ', '卍', '☸'];
+
+    // 花瓣数据
+    let lotusPetals = [];
+
+    function initLotus() {
+      lotusPetals = [];
+      const petalCount = 12; // 12瓣莲花
+      for (let i = 0; i < petalCount; i++) {
+        lotusPetals.push({
+          angle: (i / petalCount) * Math.PI * 2,
+          char: LOTUS_CHARS[Math.floor(Math.random() * LOTUS_CHARS.length)],
+          length: 280 + Math.random() * 70,
+          width: 80 + Math.random() * 30,
+          delay: Math.random() * 500,
+          opacity: 0.5 + Math.random() * 0.3
+        });
+      }
+    }
+
+    function drawLotus(timestamp) {
+      const elapsed = timestamp - lotusStart;
+      lotusCtx.clearRect(0, 0, LOTUS_SIZE, LOTUS_SIZE);
+
+      if (elapsed > LOTUS_DURATION) {
+        lotusAnimating = false;
+        return;
+      }
+
+      const overallProgress = elapsed / LOTUS_DURATION;
+
+      // 整体淡入淡出
+      let masterAlpha = 1;
+      if (overallProgress < 0.1) masterAlpha = overallProgress / 0.1;
+      else if (overallProgress > 0.8) masterAlpha = (1 - overallProgress) / 0.2;
+
+      // 莲花旋转展开（更平滑的过渡）
+      const rotationDuration = 6000;
+      const rotationProgress = Math.min(elapsed / rotationDuration, 1);
+      // 使用更平滑的缓动
+      const easedRotation = 1 - Math.pow(1 - rotationProgress, 2);
+      const rotation = easedRotation * Math.PI * 0.4 + (elapsed / 1000) * 0.02;
+
+      lotusCtx.save();
+      lotusCtx.translate(LOTUS_CENTER, LOTUS_CENTER);
+      lotusCtx.rotate(rotation);
+
+      for (const petal of lotusPetals) {
+        const petalTime = elapsed - petal.delay;
+        if (petalTime < 0) continue;
+
+        // 旋转展开：更慢更自然
+        const expandDuration = 5000;
+        const bloomProgress = Math.min(petalTime / expandDuration, 1);
+
+        // 更平滑的缓动函数 (ease-in-out)
+        const eased = bloomProgress < 0.5
+          ? 2 * bloomProgress * bloomProgress
+          : 1 - Math.pow(-2 * bloomProgress + 2, 2) / 2;
+
+        // 花瓣轻微呼吸
+        const breath = 1 + Math.sin(elapsed / 1200 + petal.angle) * 0.025;
+        const length = petal.length * eased * breath;
+        const width = petal.width * eased * breath;
+
+        lotusCtx.save();
+        lotusCtx.rotate(petal.angle);
+
+        // 绘制花瓣轮廓 (贝塞尔曲线)
+        lotusCtx.beginPath();
+        lotusCtx.moveTo(0, 0);
+        lotusCtx.bezierCurveTo(
+          width * 0.5, -length * 0.3,
+          width * 0.8, -length * 0.7,
+          0, -length
+        );
+        lotusCtx.bezierCurveTo(
+          -width * 0.8, -length * 0.7,
+          -width * 0.5, -length * 0.3,
+          0, 0
+        );
+
+        // 花瓣渐变填充 (更淡)
+        const gradient = lotusCtx.createLinearGradient(0, 0, 0, -length);
+        gradient.addColorStop(0, `rgba(255, 180, 200, ${masterAlpha * petal.opacity * 0.25})`);
+        gradient.addColorStop(0.5, `rgba(255, 200, 180, ${masterAlpha * petal.opacity * 0.18})`);
+        gradient.addColorStop(1, `rgba(255, 220, 200, ${masterAlpha * petal.opacity * 0.08})`);
+
+        lotusCtx.fillStyle = gradient;
+        lotusCtx.shadowColor = 'rgba(255, 150, 180, 0.15)';
+        lotusCtx.shadowBlur = 6;
+        lotusCtx.fill();
+
+        // 花瓣边缘
+        lotusCtx.strokeStyle = `rgba(255, 180, 150, ${masterAlpha * petal.opacity * 0.3})`;
+        lotusCtx.lineWidth = 1;
+        lotusCtx.stroke();
+
+        // 花瓣上的梵文
+        if (bloomProgress > 0.5) {
+          const charAlpha = (bloomProgress - 0.5) * 2;
+          lotusCtx.font = '300 24px "ZCOOL XiaoWei", serif';
+          lotusCtx.textAlign = 'center';
+          lotusCtx.textBaseline = 'middle';
+          lotusCtx.fillStyle = `rgba(200, 150, 100, ${masterAlpha * charAlpha * petal.opacity * 0.6})`;
+          lotusCtx.shadowColor = 'rgba(180, 120, 60, 0.2)';
+          lotusCtx.shadowBlur = 2;
+          lotusCtx.fillText(petal.char, 0, -length * 0.5);
+        }
+
+        lotusCtx.restore();
+      }
+
+      // 莲花中心
+      const centerGlow = lotusCtx.createRadialGradient(0, 0, 0, 0, 0, 60);
+      centerGlow.addColorStop(0, `rgba(255, 220, 150, ${masterAlpha * 0.35})`);
+      centerGlow.addColorStop(0.5, `rgba(255, 200, 100, ${masterAlpha * 0.18})`);
+      centerGlow.addColorStop(1, 'transparent');
+      lotusCtx.fillStyle = centerGlow;
+      lotusCtx.beginPath();
+      lotusCtx.arc(0, 0, 60, 0, Math.PI * 2);
+      lotusCtx.fill();
+
+      // 中心 ॐ 字
+      lotusCtx.font = '300 42px "ZCOOL XiaoWei", serif';
+      lotusCtx.textAlign = 'center';
+      lotusCtx.textBaseline = 'middle';
+      lotusCtx.fillStyle = `rgba(200, 150, 50, ${masterAlpha * 0.5})`;
+      lotusCtx.shadowColor = 'rgba(180, 120, 30, 0.5)';
+      lotusCtx.shadowBlur = 6;
+      lotusCtx.fillText('ॐ', 0, 0);
+
+      lotusCtx.restore();
+
+      if (lotusAnimating) {
+        requestAnimationFrame(drawLotus);
+      }
+    }
+
+    function startLotus(level) {
+      initLotus();
+      // 根据等级调整亮度
+      const brightnessMultiplier = 0.7 + level * 0.1;
+      for (const petal of lotusPetals) {
+        petal.opacity *= brightnessMultiplier;
+      }
+      lotusAnimating = true;
+      lotusStart = performance.now();
+      requestAnimationFrame(drawLotus);
+    }
+
+    // 根据金额触发不同特效（独立）
+    // $1.024 = 佛光
+    // $10.24 = 波纹
+    // $102.4 = 莲花绽放
+    // $1024 = 法轮 + 背景变佛经
+    function triggerEffect(amount) {
+      if (amount >= 1024) {
+        // 法轮
+        startDharmaWheel(4);
+      } else if (amount >= 102.4) {
+        // 莲花绽放
+        startLotus(3);
+      } else if (amount >= 10.24) {
+        // 波纹
+        startRipples(2);
+      } else {
+        // 佛光
+        dom.buddhaLight.classList.remove('active');
+        void dom.buddhaLight.offsetWidth;
+        dom.buddhaLight.classList.add('active');
+      }
     }
 
     async function fetchConfig() {
@@ -482,263 +1142,437 @@
     }
 
     async function makeWish(amount, content, network) {
+      console.log('makeWish called:', { amount, content, network });
+
       const res = await fetch('/api/wish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount, content, network }),
       });
 
+      console.log('Initial response status:', res.status);
+
       if (res.status !== 402) {
         if (res.ok) return res.json();
         const err = await res.json();
+        console.error('Initial request failed:', err);
         throw new Error(err.error?.message || 'Request failed');
       }
 
-      const { accepts } = await res.json();
+      const data = await res.json();
+      console.log('402 response:', data);
+      const { accepts } = data;
       if (!accepts?.[0]) throw new Error('No payment requirements');
 
+      console.log('Creating payment auth for:', accepts[0]);
       const payment = await createPaymentAuth(accepts[0]);
+      console.log('Payment auth created:', payment);
+
       const payRes = await fetch('/api/wish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-PAYMENT': btoa(JSON.stringify(payment)) },
         body: JSON.stringify({ amount, content, network }),
       });
 
+      console.log('Payment response status:', payRes.status);
+
       if (!payRes.ok) {
         const err = await payRes.json().catch(() => ({}));
-        throw new Error(err.error?.message || 'Payment failed');
+        console.error('Payment failed:', err);
+        // Translate error codes to user-friendly messages
+        const errorMessages = {
+          'insufficient_funds': 'insufficient USDC balance',
+          'invalid_signature': 'signature verification failed',
+          'expired': 'payment authorization expired',
+          'already_used': 'payment already processed',
+          'invalid_amount': 'invalid payment amount',
+        };
+        const errorCode = err.error || '';
+        const friendlyMsg = errorMessages[errorCode] || err.error?.message || `payment failed (${payRes.status})`;
+        throw new Error(friendlyMsg);
       }
       return payRes.json();
     }
 
-    async function connectWallet() {
-      if (!window.ethereum) throw new Error('请安装 MetaMask');
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    async function connectWallet(walletType) {
+      const provider = getProvider(walletType);
+      if (!provider) throw new Error(`${walletType} not installed`);
+
+      const accounts = await provider.request({ method: 'eth_requestAccounts' });
       state.address = accounts[0];
-      state.chainId = parseInt(await window.ethereum.request({ method: 'eth_chainId' }), 16);
-      window.ethereum.on('accountsChanged', accs => { state.address = accs[0] || null; updateUI(); });
-      window.ethereum.on('chainChanged', () => location.reload());
+      state.chainId = parseInt(await provider.request({ method: 'eth_chainId' }), 16);
+      state.walletType = walletType;
+      setupWalletListeners(provider);
+    }
+
+    // 尝试恢复已连接的钱包（不弹窗）
+    async function tryRestoreWallet() {
+      // Try MetaMask first, then Phantom
+      for (const walletType of ['metamask', 'phantom']) {
+        const provider = getProvider(walletType);
+        if (!provider) continue;
+
+        try {
+          const accounts = await provider.request({ method: 'eth_accounts' });
+          if (accounts.length > 0) {
+            state.address = accounts[0];
+            state.chainId = parseInt(await provider.request({ method: 'eth_chainId' }), 16);
+            state.walletType = walletType;
+            setupWalletListeners(provider);
+            updateUI();
+            return;
+          }
+        } catch (e) {
+          console.log(`Failed to restore ${walletType}:`, e);
+        }
+      }
+    }
+
+    function setupWalletListeners(provider) {
+      provider.removeAllListeners?.('accountsChanged');
+      provider.removeAllListeners?.('chainChanged');
+      provider.on('accountsChanged', accs => {
+        state.address = accs[0] || null;
+        if (!accs[0]) state.walletType = null;
+        updateUI();
+      });
+      provider.on('chainChanged', () => location.reload());
+    }
+
+    function disconnectWallet() {
+      state.address = null;
+      state.chainId = null;
+      state.walletType = null;
+      updateUI();
     }
 
     async function createPaymentAuth(req) {
-      const { asset, payTo, maxAmountRequired, extra, network, maxTimeoutSeconds } = req;
-      const nonce = '0x' + [...crypto.getRandomValues(new Uint8Array(32))].map(b => b.toString(16).padStart(2, '0')).join('');
-      const now = Math.floor(Date.now() / 1000);
-      const validAfter = BigInt(now - 600);
-      const validBefore = BigInt(now + (maxTimeoutSeconds || 3600));
-      const chainId = NETWORK_CONFIG[network]?.chainId || state.chainId;
+      try {
+        console.log('createPaymentAuth req:', req);
+        const { asset, payTo, maxAmountRequired, extra, network, maxTimeoutSeconds } = req;
+        const provider = getProvider(state.walletType);
+        if (!provider) throw new Error('Wallet not connected');
 
-      if (state.chainId !== chainId) {
-        await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: `0x${chainId.toString(16)}` }] });
-        state.chainId = chainId;
+        const nonce = '0x' + [...crypto.getRandomValues(new Uint8Array(32))].map(b => b.toString(16).padStart(2, '0')).join('');
+        const now = Math.floor(Date.now() / 1000);
+        const validAfter = BigInt(now - 600);
+        const validBefore = BigInt(now + (maxTimeoutSeconds || 3600));
+        const chainId = NETWORK_CONFIG[network]?.chainId || state.chainId;
+
+        console.log('Chain check:', { currentChainId: state.chainId, requiredChainId: chainId, network });
+
+        if (state.chainId !== chainId) {
+          console.log('Switching chain to:', chainId);
+          await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: `0x${chainId.toString(16)}` }] });
+          state.chainId = chainId;
+        }
+
+        const walletClient = createWalletClient({ chain: { id: chainId, name: network }, transport: custom(provider) });
+        const from = getAddress(state.address), to = getAddress(payTo);
+
+        console.log('Signing typed data:', { from, to, value: maxAmountRequired, asset, chainId });
+
+        const signature = await walletClient.signTypedData({
+          account: from,
+          domain: { name: extra?.name || 'USDC', version: extra?.version || '2', chainId, verifyingContract: getAddress(asset) },
+          types: { TransferWithAuthorization: [
+            { name: 'from', type: 'address' }, { name: 'to', type: 'address' }, { name: 'value', type: 'uint256' },
+            { name: 'validAfter', type: 'uint256' }, { name: 'validBefore', type: 'uint256' }, { name: 'nonce', type: 'bytes32' },
+          ]},
+          primaryType: 'TransferWithAuthorization',
+          message: { from, to, value: BigInt(maxAmountRequired), validAfter, validBefore, nonce },
+        });
+
+        console.log('Signature obtained:', signature);
+
+        return {
+          x402Version: 1, scheme: 'exact', network,
+          payload: { signature, authorization: { from, to, value: maxAmountRequired, validAfter: validAfter.toString(), validBefore: validBefore.toString(), nonce } },
+        };
+      } catch (err) {
+        console.error('createPaymentAuth error:', err);
+        throw err;
       }
-
-      const walletClient = createWalletClient({ chain: { id: chainId, name: network }, transport: custom(window.ethereum) });
-      const from = getAddress(state.address), to = getAddress(payTo);
-
-      const signature = await walletClient.signTypedData({
-        account: from,
-        domain: { name: extra?.name || 'USDC', version: extra?.version || '2', chainId, verifyingContract: getAddress(asset) },
-        types: { TransferWithAuthorization: [
-          { name: 'from', type: 'address' }, { name: 'to', type: 'address' }, { name: 'value', type: 'uint256' },
-          { name: 'validAfter', type: 'uint256' }, { name: 'validBefore', type: 'uint256' }, { name: 'nonce', type: 'bytes32' },
-        ]},
-        primaryType: 'TransferWithAuthorization',
-        message: { from, to, value: BigInt(maxAmountRequired), validAfter, validBefore, nonce },
-      });
-
-      return {
-        x402Version: 1, scheme: 'exact', network,
-        payload: { signature, authorization: { from, to, value: maxAmountRequired, validAfter: validAfter.toString(), validBefore: validBefore.toString(), nonce } },
-      };
     }
 
     function updateUI() {
       if (state.address) {
         dom.wallet.textContent = `${state.address.slice(0, 6)}...${state.address.slice(-4)}`;
         dom.walletStatus.classList.add('connected');
+        dom.chainSwitcher.classList.add('connected');
       } else {
-        dom.wallet.textContent = 'disconnected';
+        dom.wallet.textContent = 'connect wallet';
         dom.walletStatus.classList.remove('connected');
+        dom.chainSwitcher.classList.remove('connected');
       }
     }
 
     // Chain switcher
     function updateChainDisplay() {
-      dom.chainName.textContent = CHAINS[state.chainIndex];
+      const chains = getChains();
+      dom.chainName.textContent = chains[state.chainIndex];
     }
 
     dom.chainPrev.addEventListener('click', () => {
-      state.chainIndex = (state.chainIndex - 1 + CHAINS.length) % CHAINS.length;
+      const chains = getChains();
+      state.chainIndex = (state.chainIndex - 1 + chains.length) % chains.length;
       updateChainDisplay();
-      addMessage(`switched to ${CHAINS[state.chainIndex]}`);
+      addMessage(`switched to ${chains[state.chainIndex]}`);
     });
 
     dom.chainNext.addEventListener('click', () => {
-      state.chainIndex = (state.chainIndex + 1) % CHAINS.length;
+      const chains = getChains();
+      state.chainIndex = (state.chainIndex + 1) % chains.length;
       updateChainDisplay();
-      addMessage(`switched to ${CHAINS[state.chainIndex]}`);
+      addMessage(`switched to ${chains[state.chainIndex]}`);
     });
 
     // Wallet connect/disconnect on header click
-    dom.walletStatus.addEventListener('click', async () => {
+    // Wallet status click - show modal or disconnect
+    dom.walletStatus.addEventListener('click', () => {
       if (state.address) {
-        state.address = null;
-        state.chainId = null;
-        updateUI();
+        disconnectWallet();
         addMessage('wallet disconnected');
       } else {
-        try {
-          addMessage('connecting...');
-          await connectWallet();
-          updateUI();
-          addMessage('wallet connected', 'success');
-        } catch (e) { addMessage(e.message, 'error'); }
+        showWalletModal();
       }
+    });
+
+    // Wallet modal close (click outside)
+    dom.walletModal.addEventListener('click', (e) => {
+      if (e.target === dom.walletModal) hideWalletModal();
+    });
+
+    // Network toggle in modal
+    dom.networkToggle.forEach(opt => {
+      opt.addEventListener('click', () => {
+        dom.networkToggle.forEach(el => el.classList.remove('selected'));
+        opt.classList.add('selected');
+        state.networkType = opt.dataset.network;
+        state.chainIndex = 0; // Reset to first chain
+      });
+    });
+
+    // Wallet option click
+    document.querySelectorAll('.wallet-option').forEach(opt => {
+      opt.addEventListener('click', async () => {
+        if (opt.classList.contains('disabled')) return;
+
+        const walletType = opt.dataset.wallet;
+        hideWalletModal();
+
+        try {
+          addMessage(`connecting ${walletType}...`);
+          await connectWallet(walletType);
+          updateUI();
+          updateChainDisplay();
+          addMessage(`${walletType} connected (${state.networkType})`, 'success');
+        } catch (e) {
+          addMessage(e.message, 'error');
+        }
+      });
     });
 
     // Make wish on action button click
     dom.action.addEventListener('click', async () => {
+      const amount = state.selectedAmount;
+
       if (!state.address) {
         addMessage('please connect wallet first', 'error');
         return;
       }
 
-      const amount = dom.amount.value;
-      if (!amount || parseFloat(amount) < 0.01) { addMessage('min amount $0.01', 'error'); return; }
-
       try {
         dom.action.disabled = true;
-        addMessage('preparing payment...');
-        const network = CHAINS[state.chainIndex];
+        addMessage(`preparing $${amount} payment...`);
+        const network = getChains()[state.chainIndex];
         const result = await makeWish(amount, dom.wish.value || undefined, network);
+        console.log('Payment success, triggering effect for amount:', amount, result);
         addMessage(result.message, 'success');
-        // Golden light + coin flip animation (flips to 1024 at the end)
-        triggerGoldenLight();
-        startCoinFlip();
+        triggerEffect(amount);
+        startCoinFlip(amount);
         dom.wish.value = '';
-      } catch (e) { addMessage(e.message, 'error'); }
+      } catch (e) {
+        console.error('Payment error:', e);
+        addMessage(e.message, 'error');
+      }
       finally { dom.action.disabled = false; }
     });
 
-    // Canvas background - same visual effect, much better performance
-    const canvas = document.getElementById('bg-canvas');
-    const ctx = canvas.getContext('2d');
-    let items = [];
+    // PixiJS GPU 加速背景
+    const BG_SUTRAS = [
+      'ॐ', '卍', '☸', '࿕', '࿖',
+      '佛', '禅', '空', '慧', '悟', '缘', '善', '福', '德', '静', '净', '觉', '道', '心', '念', '定', '智', '明', '法', '果',
+      '菩提', '涅槃', '般若', '因果', '轮回', '解脱', '慈悲', '功德', '清净', '圆满', '如来', '真如', '无我', '正念', '觉悟',
+      '阿弥陀佛', '色即是空', '空即是色', '明心见性', '返璞归真', '随缘自在', '心无挂碍', '一念成佛', '回头是岸', '放下执念',
+      '唵嘛呢叭咪吽', '南无阿弥陀佛', '诸法无我', '诸行无常', '涅槃寂静', '一切皆空', '缘起性空', '应无所住'
+    ];
+
+    let pixiApp = null;
+    let textSprites = [];
     let animating = false;
     let animationStart = 0;
-    let flippedTo1024 = false; // After flip animation, some items become 1024
-    const ANIMATION_DURATION = 10; // seconds
-    const MAX_DELAY = 3; // seconds
+    const ANIMATION_DURATION = 10;
+    const MAX_DELAY = 3;
 
-    function initCanvas() {
-      canvas.width = window.innerWidth * devicePixelRatio;
-      canvas.height = window.innerHeight * devicePixelRatio;
-      ctx.scale(devicePixelRatio, devicePixelRatio);
+    async function initPixi() {
+      const container = document.getElementById('bg-container');
 
-      // Generate items matching the CSS version layout
-      items = [];
-      const text = 'x402';
-      ctx.font = '12px Courier New';
-      const textWidth = ctx.measureText(text).width;
+      // 创建 PixiJS 应用
+      pixiApp = new PIXI.Application();
+      await pixiApp.init({
+        width: window.innerWidth,
+        height: window.innerHeight,
+        backgroundAlpha: 0,
+        antialias: true,
+        resolution: window.devicePixelRatio || 1,
+        autoDensity: true,
+      });
+
+      container.appendChild(pixiApp.canvas);
+
+      // 生成文字精灵
+      const textStyle = new PIXI.TextStyle({
+        fontFamily: 'Courier New',
+        fontSize: 12,
+        fill: 0xffaa00,
+      });
+
+      // 测量 x402 宽度
+      const measureText = new PIXI.Text({ text: 'x402', style: textStyle });
+      const textWidth = measureText.width;
+      measureText.destroy();
 
       let x = 0, y = 0;
       const lineHeight = 12 * 1.6;
 
       while (y < window.innerHeight + lineHeight) {
-        x = (Math.random() - 0.5) * 50; // Random start offset
+        x = (Math.random() - 0.5) * 50;
         while (x < window.innerWidth + 50) {
           const spacing = Math.random() * 30;
-          items.push({
-            x: x + (Math.random() - 0.5) * 12,
-            y: y + (Math.random() - 0.5) * 10,
-            baseOpacity: 0.22 * (0.25 + Math.random() * 0.75),
-            delay: Math.random() * MAX_DELAY,
-            is1024: Math.random() < 0.5 // 50% chance to be 1024 after flip
+          const baseOpacity = 0.22 * (0.25 + Math.random() * 0.75);
+
+          const sprite = new PIXI.Text({
+            text: 'x402',
+            style: new PIXI.TextStyle({
+              fontFamily: 'Courier New',
+              fontSize: 12,
+              fill: 0xffaa00,
+            })
           });
+
+          sprite.x = x + (Math.random() - 0.5) * 12;
+          sprite.y = y + (Math.random() - 0.5) * 10;
+          sprite.alpha = baseOpacity;
+          sprite.anchor.set(0.5, 0);
+
+          // 存储额外数据
+          sprite._data = {
+            baseOpacity,
+            delay: Math.random() * MAX_DELAY,
+            is1024: Math.random() < 0.5,
+            sutra: BG_SUTRAS[Math.floor(Math.random() * BG_SUTRAS.length)],
+            originalText: 'x402'
+          };
+
+          pixiApp.stage.addChild(sprite);
+          textSprites.push(sprite);
+
           x += textWidth + 4 + spacing;
         }
         y += lineHeight;
       }
 
-      drawFrame();
+      console.log('PixiJS sprites:', textSprites.length);
+
+      // 动画循环
+      pixiApp.ticker.add(animationLoop);
     }
 
-    // Easing function to match CSS ease-in-out
     function easeInOut(t) {
       return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
     }
 
-    function drawFrame(timestamp) {
-      ctx.clearRect(0, 0, canvas.width / devicePixelRatio, canvas.height / devicePixelRatio);
-      ctx.font = '12px Courier New';
-      ctx.textBaseline = 'top';
+    function animationLoop() {
+      if (!animating) return;
 
-      const elapsed = animating ? (timestamp - animationStart) / 1000 : 0;
+      const elapsed = (performance.now() - animationStart) / 1000;
 
-      for (const item of items) {
-        let opacity = item.baseOpacity;
-        let scaleX = 1;
-        // After animation: show mixed x402/1024 based on item.is1024
-        let text = (flippedTo1024 && item.is1024) ? '1024' : 'x402';
+      for (const sprite of textSprites) {
+        const data = sprite._data;
+        const itemTime = elapsed - data.delay;
 
-        if (animating) {
-          const itemTime = elapsed - item.delay;
-          if (itemTime > 0 && itemTime < ANIMATION_DURATION) {
-            // Apply easing
-            const progress = easeInOut(itemTime / ANIMATION_DURATION);
-            // 1 full rotation (360 deg = 2π)
-            const angle = progress * Math.PI * 2;
-            scaleX = Math.cos(angle);
-            // Brightness: peaks at middle, matches CSS filter brightness
-            const brightness = 1 + 2 * Math.sin(progress * Math.PI);
-            opacity = item.baseOpacity * brightness;
-            // Show 1024 on back side for items marked as 1024
-            if (scaleX < 0 && item.is1024) {
-              text = '1024';
-            }
-          } else if (itemTime >= ANIMATION_DURATION && item.is1024) {
-            // Animation done for this item
-            text = '1024';
+        if (itemTime > 0 && itemTime < ANIMATION_DURATION) {
+          const progress = easeInOut(itemTime / ANIMATION_DURATION);
+          const angle = progress * Math.PI * 2;
+          const scaleX = Math.cos(angle);
+
+          sprite.scale.x = Math.abs(scaleX);
+          const brightness = 1 + 2 * Math.sin(progress * Math.PI);
+          sprite.alpha = data.baseOpacity * brightness;
+
+          // 翻转到背面时切换文字
+          if (scaleX < 0 && sprite.text === data.originalText) {
+            sprite.text = data.targetText;
+          } else if (scaleX >= 0 && sprite.text !== data.originalText && itemTime < ANIMATION_DURATION / 2) {
+            sprite.text = data.originalText;
           }
+        } else if (itemTime >= ANIMATION_DURATION) {
+          sprite.scale.x = 1;
+          sprite.alpha = data.baseOpacity;
+          sprite.text = data.targetText;
         }
-
-        // Draw with transform
-        ctx.save();
-        ctx.translate(item.x + 15, item.y);
-        ctx.scale(Math.abs(scaleX), 1); // Use abs to prevent mirror
-        ctx.fillStyle = `rgba(255, 170, 0, ${Math.min(opacity, 1)})`;
-        ctx.fillText(text, -15, 0);
-        ctx.restore();
       }
 
-      if (animating && elapsed < ANIMATION_DURATION + MAX_DELAY) {
-        requestAnimationFrame(drawFrame);
-      } else if (animating) {
+      // 动画结束
+      if (elapsed >= ANIMATION_DURATION + MAX_DELAY) {
         animating = false;
-        flippedTo1024 = true;
-        drawFrame(); // Final static frame with mixed x402/1024
+        // 最终状态
+        for (const sprite of textSprites) {
+          sprite.scale.x = 1;
+          sprite.alpha = sprite._data.baseOpacity;
+          sprite.text = sprite._data.targetText;
+          sprite._data.originalText = sprite._data.targetText;
+        }
       }
     }
 
-    function startCoinFlip() {
-      // Randomize which items will flip to 1024
-      items.forEach(item => item.is1024 = Math.random() < 0.5);
+    function startCoinFlip(amount = 10.24) {
+      // 设置目标文字
+      for (const sprite of textSprites) {
+        const data = sprite._data;
+        data.delay = Math.random() * MAX_DELAY;
+        data.is1024 = Math.random() < 0.5;
+        data.sutra = BG_SUTRAS[Math.floor(Math.random() * BG_SUTRAS.length)];
+
+        if (amount >= 1024) {
+          data.targetText = `  ${data.sutra}  `;
+        } else {
+          data.targetText = data.is1024 ? '1024' : 'x402';
+        }
+      }
+
       animating = true;
       animationStart = performance.now();
-      requestAnimationFrame(drawFrame);
     }
 
-    initCanvas();
-    let resizeTimeout;
+    // 初始化 PixiJS
+    initPixi();
+
+    // resize 处理
     window.addEventListener('resize', () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(initCanvas, 200);
+      if (pixiApp) {
+        pixiApp.renderer.resize(window.innerWidth, window.innerHeight);
+      }
     });
 
     (async () => {
-      try { state.config = await fetchConfig(); updateUI(); updateChainDisplay(); }
-      catch { addMessage('failed to load config', 'error'); }
+      try {
+        state.config = await fetchConfig();
+        await tryRestoreWallet();
+        updateUI();
+        updateChainDisplay();
+      } catch { addMessage('failed to load config', 'error'); }
     })();
   </script>
 </body>

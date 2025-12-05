@@ -23,6 +23,7 @@ interface TextSpriteWithData extends PIXI.Text {
 let textSprites: TextSpriteWithData[] = [];
 let animating = false;
 let animationStart = 0;
+let tickerBound = false;
 
 function easeInOut(t: number): number {
   return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
@@ -68,6 +69,11 @@ function animationLoop(): void {
       sprite.alpha = sprite._data.baseOpacity;
       sprite.text = sprite._data.targetText || sprite._data.originalText;
       sprite._data.originalText = sprite._data.targetText || sprite._data.originalText;
+    }
+    // Stop ticker when animation completes (perf optimization)
+    if (pixiApp && tickerBound) {
+      pixiApp.ticker.remove(animationLoop);
+      tickerBound = false;
     }
   }
 }
@@ -141,10 +147,7 @@ export async function initPixiBackground(): Promise<void> {
     y += lineHeight;
   }
 
-  console.log('[UI] PixiJS sprites initialized:', textSprites.length);
-
-  // Animation loop
-  pixiApp.ticker.add(animationLoop);
+  console.log('[ui] pixi sprites initialized:', textSprites.length);
 
   // Handle window resize
   window.addEventListener('resize', () => {
@@ -155,6 +158,12 @@ export async function initPixiBackground(): Promise<void> {
 }
 
 export function startCoinFlip(amount: number = 2.048): void {
+  // Start ticker if not already running (perf optimization)
+  if (pixiApp && !tickerBound) {
+    pixiApp.ticker.add(animationLoop);
+    tickerBound = true;
+  }
+
   // Set target text based on amount
   for (const sprite of textSprites) {
     const data = sprite._data;

@@ -85,19 +85,19 @@ export function setState<K extends keyof AppState>(key: K, value: AppState[K]): 
   switch (key) {
     case 'selectedAmount':
       if (typeof value === 'number' && !AMOUNTS.includes(value)) {
-        console.warn(`[State] Invalid amount: ${value}`);
+        console.warn(`[state] invalid amount: ${value}`);
         return;
       }
       break;
     case 'networkType':
       if (value !== 'mainnet' && value !== 'testnet') {
-        console.warn(`[State] Invalid network type: ${value}`);
+        console.warn(`[state] invalid network type: ${value}`);
         return;
       }
       break;
     case 'chainIndex':
       if (typeof value === 'number' && value < 0) {
-        console.warn(`[State] Invalid chain index: ${value}`);
+        console.warn(`[state] invalid chain index: ${value}`);
         return;
       }
       break;
@@ -113,7 +113,7 @@ export function setState<K extends keyof AppState>(key: K, value: AppState[K]): 
       try {
         listener(value, oldValue);
       } catch (err) {
-        console.error(`[State] Listener error for ${key}:`, err);
+        console.error(`[state] listener error for ${key}:`, err);
       }
     }
   }

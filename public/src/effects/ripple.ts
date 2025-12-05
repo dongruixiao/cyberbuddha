@@ -8,6 +8,7 @@ const RIPPLE_DURATION = 10000;
 
 let rippleAnimating = false;
 let rippleStart = 0;
+let rafId: number | null = null;
 
 interface RippleChar {
   text: string;
@@ -53,6 +54,12 @@ function drawRipples(timestamp: number): void {
   const elapsed = timestamp - rippleStart;
   ctx.clearRect(0, 0, RIPPLE_SIZE, RIPPLE_SIZE);
 
+  // Set common properties once (perf optimization)
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(255, 170, 0, 0.9)';
+  ctx.shadowBlur = 15;
+
   let anyActive = false;
 
   for (const ripple of ripples) {
@@ -77,12 +84,15 @@ function drawRipples(timestamp: number): void {
     // Draw ripple ring
     ctx.beginPath();
     ctx.arc(RIPPLE_CENTER, RIPPLE_CENTER, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(180, 150, 80, ${alpha * 0.3})`;
+    ctx.strokeStyle = `rgba(255, 170, 0, ${alpha * 0.7})`;
     ctx.lineWidth = 2;
     ctx.stroke();
 
     // Draw mantras on the ripple
     const rotation = (rippleTime / 1000) * ripple.speed;
+    const fontSize = 14 + progress * 6; // Grow as it expands
+    ctx.font = `300 ${fontSize}px "ZCOOL XiaoWei", serif`;
+
     for (const char of ripple.chars) {
       const angle = char.angle + rotation;
       const x = RIPPLE_CENTER + Math.cos(angle) * radius;
@@ -92,13 +102,7 @@ function drawRipples(timestamp: number): void {
       ctx.translate(x, y);
       ctx.rotate(angle + Math.PI / 2);
 
-      const fontSize = 14 + progress * 6; // Grow as it expands
-      ctx.font = `300 ${fontSize}px "ZCOOL XiaoWei", serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = `rgba(200, 170, 80, ${alpha * char.opacity})`;
-      ctx.shadowColor = 'rgba(180, 140, 30, 0.3)';
-      ctx.shadowBlur = 4;
+      ctx.fillStyle = `rgba(255, 180, 50, ${alpha * char.opacity * 1.3})`;
       ctx.fillText(char.text, 0, 0);
 
       ctx.restore();
@@ -106,13 +110,19 @@ function drawRipples(timestamp: number): void {
   }
 
   if (anyActive && rippleAnimating) {
-    requestAnimationFrame(drawRipples);
+    rafId = requestAnimationFrame(drawRipples);
   } else {
     rippleAnimating = false;
+    rafId = null;
   }
 }
 
 export function startRipples(level: number): void {
+  // Cancel any existing animation
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId);
+  }
+
   initRipples();
   // Adjust brightness based on level
   const brightnessMultiplier = 0.7 + level * 0.1;
@@ -123,5 +133,5 @@ export function startRipples(level: number): void {
   }
   rippleAnimating = true;
   rippleStart = performance.now();
-  requestAnimationFrame(drawRipples);
+  rafId = requestAnimationFrame(drawRipples);
 }

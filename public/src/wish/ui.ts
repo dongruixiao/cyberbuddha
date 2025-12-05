@@ -7,7 +7,36 @@ import { triggerEffect } from '../effects/trigger';
 import { startCoinFlip } from '../effects/background';
 import { getChains } from '../wallet/ui';
 
+// Debounce timer for typing effect
+let typingTimer: number | null = null;
+const TYPING_TIMEOUT = 800; // ms after last keystroke to stop effect
+
 export function initWishUI(): void {
+  // Buddha breathing effect when typing
+  dom.wish.addEventListener('input', () => {
+    dom.buddhaWrapper.classList.add('typing');
+
+    // Clear existing timer
+    if (typingTimer !== null) {
+      clearTimeout(typingTimer);
+    }
+
+    // Stop effect after user stops typing
+    typingTimer = window.setTimeout(() => {
+      dom.buddhaWrapper.classList.remove('typing');
+      typingTimer = null;
+    }, TYPING_TIMEOUT);
+  });
+
+  // Also stop when input loses focus
+  dom.wish.addEventListener('blur', () => {
+    if (typingTimer !== null) {
+      clearTimeout(typingTimer);
+      typingTimer = null;
+    }
+    dom.buddhaWrapper.classList.remove('typing');
+  });
+
   // Amount selection
   dom.amountSelect.addEventListener('click', (e) => {
     const opt = (e.target as HTMLElement).closest('.amount-opt');
@@ -25,16 +54,16 @@ export function initWishUI(): void {
     const chainIndex = getState('chainIndex');
 
     if (!address) {
-      addMessage('please connect wallet first', 'error');
+      addMessage('connect wallet first, pilgrim', 'error');
       return;
     }
 
     try {
       dom.action.disabled = true;
-      addMessage(`preparing $${amount} payment...`);
+      addMessage(`preparing $${amount} karma...`);
       const network = getChains()[chainIndex];
       const result = await makeWish(amount, dom.wish.value || undefined, network);
-      console.log('[Wish] Payment success, triggering effect for amount:', amount, result);
+      console.log('[wish] payment success, triggering effect:', amount, result);
       addMessage(result.message, 'success');
 
       // Show warning if DB save failed
@@ -46,7 +75,7 @@ export function initWishUI(): void {
       startCoinFlip(amount);
       dom.wish.value = '';
     } catch (e) {
-      console.error('[Wish] Payment error:', e);
+      console.error('[wish] payment error:', e);
       addMessage((e as Error).message, 'error');
     }
     finally { dom.action.disabled = false; }

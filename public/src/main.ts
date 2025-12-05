@@ -43,8 +43,8 @@ async function init(): Promise<void> {
     updateUI();
     updateChainDisplay();
   } catch (e) {
-    addMessage('failed to load config', 'error');
-    console.error('[Init] Error:', e);
+    addMessage('config loading failed. buddha is napping.', 'error');
+    console.error('[init] error:', e);
   }
 }
 

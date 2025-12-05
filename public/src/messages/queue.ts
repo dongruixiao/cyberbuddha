@@ -14,7 +14,8 @@ interface Message {
 const messages: Message[] = [];
 
 function renderMessages(): void {
-  dom.msgQueue.innerHTML = '';
+  // Use DocumentFragment to batch DOM operations (perf optimization)
+  const fragment = document.createDocumentFragment();
   messages.forEach((msg, i) => {
     const el = document.createElement('div');
     el.className = `msg-item ${msg.type}`;
@@ -23,8 +24,11 @@ function renderMessages(): void {
     el.style.opacity = String(opacity);
     el.textContent = msg.text;
     msg.el = el;
-    dom.msgQueue.appendChild(el);
+    fragment.appendChild(el);
   });
+  // Single DOM update instead of multiple appends
+  dom.msgQueue.innerHTML = '';
+  dom.msgQueue.appendChild(fragment);
 }
 
 export function addMessage(text: string, type: '' | 'error' | 'success' = ''): void {

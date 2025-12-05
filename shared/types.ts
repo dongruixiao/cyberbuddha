@@ -95,7 +95,7 @@ export interface NetworkConfig {
   explorer: string;
 }
 
-export const NETWORK_CONFIGS: Record<Network, NetworkConfig> = {
+export const NETWORK_CONFIGS: Record<PaymentNetwork, NetworkConfig> = {
   base: {
     chainId: 8453,
     name: 'Base',
@@ -139,6 +139,31 @@ export const MIN_AMOUNT = 0.01;
 export const MAX_AMOUNT = 10000;
 export const MAX_CONTENT_LENGTH = 200;
 export const FACILITATOR_URL = 'https://facilitator.payai.network';
+
+// Default content
+export const DEFAULT_WISH_CONTENT = 'may this merit reach all beings';
+export const DEFAULT_WISH_PLACEHOLDER = 'namo://typing...';
+
+// User-facing messages (zen meme edition)
+export const MESSAGES = {
+  // success
+  PRAYER_HEARD: 'karma on-chain. buddha has seen it. no reply.',
+  // warnings
+  DB_SAVE_WARNING: 'wish recorded on-chain. wall updates when the universe allows.',
+  // errors
+  INSUFFICIENT_BALANCE: 'insufficient balance. consider cultivating more karma.',
+  SIGNATURE_FAILED: 'signature invalid. not the signature you seek.',
+  PAYMENT_EXPIRED: 'payment expired. karma timeout.',
+  SIGNATURE_CANCELLED: 'transcendence cancelled by user',
+  ALREADY_PROCESSED: 'already processed. greed is suffering.',
+  INVALID_AMOUNT: 'invalid amount. karma cannot compute.',
+} as const;
+
+// Wallet display names
+export const WALLET_NAMES: Record<string, string> = {
+  metamask: 'MetaMask',
+  phantom: 'Phantom',
+} as const;
 
 // Utility functions
 export function usdToAtomicUnits(usd: number): string {

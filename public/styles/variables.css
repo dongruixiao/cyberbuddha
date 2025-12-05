@@ -1,12 +1,40 @@
 /* Design tokens and CSS custom properties */
 :root {
-  --neon-start: #00ff88;
-  --neon-end: #00d4ff;
-  --neon: #00ff88;
-  --neon-dim: #00ff8866;
+  /* 主色 - 紫禅 */
+  --neon: #aa88dd;
+  --neon-dim: #9977cc66;
+  --neon-glow: #cc99ff;
+  --neon-subtle: #9966cc33;
+
+  /* 金色 - 特效专用 */
   --gold: #ffaa00;
+  --gold-dim: #ffaa0066;
+  --gold-bright: #ffcc44;
+  --gold-subtle: #ffaa0033;
+
+  /* 辅助色 */
+  --purple-zen: #9966cc;
+  --purple-bright: #bb88ff;
+  --flame: #ff6b35;
+  --error: #ff6b8a;
+
+  /* 背景 */
   --bg: #0a0a0a;
-  --flame: #ff6600;
+  --bg-elevated: #111111;
+  --bg-overlay: rgba(0, 0, 0, 0.85);
+
+  /* 字号体系 (4px 递进) */
+  --font-xs: 10px;
+  --font-sm: 12px;
+  --font-md: 14px;
+  --font-lg: 16px;
+
+  /* 透明度规范 */
+  --alpha-10: 0.1;
+  --alpha-25: 0.25;
+  --alpha-40: 0.4;
+  --alpha-60: 0.6;
+  --alpha-80: 0.8;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }

@@ -80,7 +80,7 @@
 }
 
 .buddha {
-  font-size: 12px;
+  font-size: var(--font-sm);
   line-height: 1.2;
   white-space: pre;
   background: linear-gradient(135deg,
@@ -104,9 +104,9 @@
 }
 
 .title {
-  font-size: 12px;
+  font-size: var(--font-sm);
   margin-top: 12px;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
   background: linear-gradient(90deg,
     #bf00ff 0%,
     #00d4ff 25%,
@@ -133,4 +133,42 @@
 @keyframes rainbow-slide {
   0% { background-position: 0% 50%; }
   100% { background-position: 200% 50%; }
+}
+
+/* Buddha breathing effect when typing (only when halo is NOT active) */
+.buddha-wrapper.typing .buddha-light:not(.active) {
+  width: 120px;
+  height: 120px;
+  opacity: 0.6;
+  animation: typing-breath 1.5s ease-in-out infinite;
+}
+
+@keyframes typing-breath {
+  0%, 100% {
+    width: 100px;
+    height: 100px;
+    opacity: 0.4;
+    background: radial-gradient(circle,
+      rgba(153, 102, 204, 0.25) 0%,
+      rgba(153, 102, 204, 0.1) 50%,
+      transparent 70%);
+  }
+  50% {
+    width: 160px;
+    height: 160px;
+    opacity: 0.7;
+    background: radial-gradient(circle,
+      rgba(187, 136, 255, 0.35) 0%,
+      rgba(153, 102, 204, 0.15) 50%,
+      transparent 70%);
+  }
+}
+
+.buddha-wrapper.typing .buddha:not(.active) {
+  animation: rainbow-flow 4s ease-in-out infinite, buddha-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes buddha-pulse {
+  0%, 100% { filter: drop-shadow(0 0 8px #ff00ff) drop-shadow(0 0 15px #00d4ff); }
+  50% { filter: drop-shadow(0 0 12px #bb88ff) drop-shadow(0 0 20px #9966cc); }
 }

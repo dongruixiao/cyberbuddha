@@ -3,31 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>:: CYBER BUDDHA :: Wishing Well on x402 Protocol</title>
+  <title>:: 赛博佛祖 :: - Wishing on Chain Powered by x402 Protocol</title>
 
   <!-- SEO Meta Tags -->
-  <meta name="description" content="Cyber Buddha - A Web3 wishing well powered by x402 protocol. Make a wish, pay with USDC, and let your prayers live on-chain forever.">
-  <meta name="keywords" content="Cyber Buddha, x402, Web3, blockchain, crypto, USDC, wishing well, on-chain, Base, Polygon, Avalanche, 赛博佛祖">
+  <meta name="description" content="赛博佛祖 Cyber Buddha - The first x402 protocol powered wishing well. Wishing on Chain, Blessing on Chain. Pay with USDC, earn karma, let your prayers live on-chain forever. 链上许愿，链上祈福。">
+  <meta name="keywords" content="赛博佛祖, Cyber Buddha, x402, x402 protocol, HTTP 402, Web3, blockchain, USDC, on-chain wishing, on-chain blessing, 链上许愿, 链上祈福, Base, Polygon, Avalanche, crypto payments, EIP-712">
   <meta name="author" content="Cyber Buddha">
   <meta name="robots" content="index, follow">
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://fo.hackthoughts.com/">
-  <meta property="og:title" content="Cyber Buddha - Web3 Wishing Well">
-  <meta property="og:description" content="Make a wish on-chain. Pay with USDC via x402 protocol. Your prayers, forever on the blockchain.">
-  <meta property="og:site_name" content="Cyber Buddha">
+  <meta property="og:title" content=":: 赛博佛祖 :: - Wishing on Chain Powered by x402 Protocol">
+  <meta property="og:description" content="The first x402 protocol powered wishing well. Pay with USDC, earn karma on-chain. Your prayers, forever on the blockchain. 链上许愿，功德无量。">
+  <meta property="og:site_name" content="赛博佛祖 Cyber Buddha">
 
   <!-- Twitter -->
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Cyber Buddha - Web3 Wishing Well">
-  <meta name="twitter:description" content="Make a wish on-chain. Pay with USDC via x402 protocol. Your prayers, forever on the blockchain.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content=":: 赛博佛祖 :: - Wishing on Chain Powered by x402">
+  <meta property="twitter:description" content="Wishing on Chain · Blessing on Chain. The first x402 protocol powered wishing well. Pay USDC, earn karma forever.">
 
   <!-- Canonical URL -->
   <link rel="canonical" href="https://fo.hackthoughts.com/">
 
   <!-- Theme Color -->
   <meta name="theme-color" content="#0a0a0a">
+
+  <!-- Favicon (emoji) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🙏</text></svg>">
+
+  <!-- Structured Data for SEO -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "赛博佛祖 Cyber Buddha",
+    "description": "x402 protocol powered on-chain wishing well",
+    "url": "https://fo.hackthoughts.com/",
+    "applicationCategory": "Web3 Application",
+    "operatingSystem": "Web Browser",
+    "offers": {
+      "@type": "Offer",
+      "price": "1.024",
+      "priceCurrency": "USD"
+    },
+    "keywords": "x402, blockchain, USDC, wishing well, 赛博佛祖"
+  }
+  </script>
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cn-fontsource-kxzd-regular/font.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&family=Noto+Serif+SC:wght@200;300&display=swap">
@@ -44,19 +66,19 @@
 
   <div class="header-right">
     <div class="wallet-status" id="wallet-status">
-      <span class="wallet-addr" id="wallet">connect wallet</span>
+      <span class="wallet-addr" id="wallet">connect</span>
     </div>
   </div>
 
   <div class="msg-queue" id="msg-queue"></div>
 
   <!-- Wish Wall Link -->
-  <div class="wish-wall-link" id="wish-wall-link">[ WISH WALL ]</div>
+  <div class="wish-wall-link" id="wish-wall-link">[ karma wall ]</div>
 
   <!-- Wish Wall Modal -->
   <div class="wish-wall-modal" id="wish-wall-modal">
     <div class="wish-wall-content">
-      <div class="wish-wall-header">:: WISH WALL ::</div>
+      <div class="wish-wall-header">:: KARMA WALL · ON-CHAIN ::</div>
       <div class="wish-wall-list" id="wish-wall-list"></div>
       <div class="wish-wall-footer">
         <span class="wish-wall-nav" id="wish-wall-prev">« prev</span>
@@ -69,7 +91,7 @@
   <!-- Wallet Selection Modal -->
   <div class="wallet-modal" id="wallet-modal">
     <div class="wallet-modal-content">
-      <div class="wallet-modal-title">:: SELECT WALLET ::</div>
+      <div class="wallet-modal-title">:: SELECT DHARMA DEVICE ::</div>
       <div class="wallet-option" id="opt-metamask" data-wallet="metamask">
         <span class="wallet-icon">🦊</span>
         <span>MetaMask</span>
@@ -115,19 +137,19 @@
      賽 博 佛 祖          鏈 上 許 願
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</pre>
     </div>
-    <div class="title">PRAY ON CHAIN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BLESS ON CHAIN</div>
+    <div class="title">ON CHAIN WISHING · ON CHAIN BLESSING</div>
 
     <div class="terminal">
       <div class="wish-line">
-        <input type="text" class="wish-input" id="wish" placeholder="ping buddha..." maxlength="100">
+        <input type="text" class="wish-input" id="wish" placeholder="namo://typing..." maxlength="100">
       </div>
       <div class="amount-select" id="amount-select">
-        <span class="amount-opt" data-amount="1.024">$1.024</span>
-        <span class="amount-opt selected" data-amount="2.048">$2.048</span>
-        <span class="amount-opt" data-amount="4.096">$4.096</span>
-        <span class="amount-opt" data-amount="8.192">$8.192</span>
+        <span class="amount-opt" data-amount="1.024" title="casual blessing">$1.024</span>
+        <span class="amount-opt selected" data-amount="2.048" title="incense money">$2.048</span>
+        <span class="amount-opt" data-amount="4.096" title="brick & mortar">$4.096</span>
+        <span class="amount-opt" data-amount="8.192" title="infinite merit">$8.192</span>
       </div>
-      <button class="ascii-btn" id="action">:: BLESS ::</button>
+      <button class="ascii-btn" id="action">:: KARMA +1 ::</button>
     </div>
   </div>
 

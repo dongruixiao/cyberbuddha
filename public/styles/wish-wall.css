@@ -4,16 +4,16 @@
   bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 10px;
-  color: rgba(102, 102, 102, 0.6);
+  font-size: var(--font-xs);
+  color: rgba(153, 102, 204, 0.5);
   cursor: pointer;
   letter-spacing: 1px;
   transition: all 0.2s;
   z-index: 100;
 }
 .wish-wall-link:hover {
-  color: #888;
-  text-shadow: 0 0 6px rgba(136, 136, 136, 0.5);
+  color: #bb88ff;
+  text-shadow: 0 0 6px rgba(187, 136, 255, 0.5);
 }
 
 /* Wish Wall Modal */
@@ -31,19 +31,19 @@
 }
 .wish-wall-modal.show { display: flex; }
 .wish-wall-content {
-  background: #0a0a0a;
-  border: 1px solid rgba(0, 255, 136, 0.3);
+  background: var(--bg);
+  border: 1px solid var(--neon-dim);
   padding: 24px;
   width: 90%;
   max-width: 500px;
   max-height: 80vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 0 40px rgba(0, 255, 136, 0.1);
+  box-shadow: 0 0 40px var(--neon-subtle);
 }
 .wish-wall-header {
   color: var(--neon);
-  font-size: 12px;
+  font-size: var(--font-sm);
   text-align: center;
   letter-spacing: 3px;
   margin-bottom: 20px;
@@ -55,28 +55,28 @@
   margin-bottom: 16px;
 }
 .wish-wall-empty {
-  color: rgba(0, 255, 136, 0.4);
+  color: var(--neon-dim);
   text-align: center;
   padding: 40px 0;
-  font-size: 11px;
+  font-size: var(--font-xs);
 }
 .wish-item {
-  border: 1px solid rgba(0, 255, 136, 0.2);
+  border: 1px solid var(--neon-subtle);
   padding: 12px;
   margin-bottom: 10px;
-  font-size: 10px;
-  background: rgba(0, 255, 136, 0.02);
+  font-size: var(--font-xs);
+  background: rgba(153, 102, 204, 0.02);
 }
 .wish-item:hover {
-  border-color: rgba(0, 255, 136, 0.4);
-  background: rgba(0, 255, 136, 0.05);
+  border-color: rgba(153, 102, 204, 0.4);
+  background: rgba(153, 102, 204, 0.05);
 }
 .wish-item-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
-  color: rgba(0, 255, 136, 0.6);
+  color: rgba(187, 136, 255, 0.7);
 }
 .wish-item-addr {
   font-family: monospace;
@@ -90,7 +90,7 @@
   color: var(--gold);
 }
 .wish-item-network {
-  color: rgba(0, 255, 136, 0.5);
+  color: rgba(153, 102, 204, 0.6);
   font-size: 9px;
 }
 .wish-item-content {
@@ -100,17 +100,17 @@
 }
 .wish-item-content::before {
   content: '> ';
-  color: rgba(0, 255, 136, 0.4);
+  color: rgba(153, 102, 204, 0.5);
 }
 .wish-item-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: rgba(0, 255, 136, 0.4);
+  color: rgba(153, 102, 204, 0.5);
   font-size: 9px;
 }
 .wish-item-tx {
-  color: rgba(0, 255, 136, 0.5);
+  color: rgba(187, 136, 255, 0.6);
   text-decoration: none;
   transition: all 0.2s;
 }
@@ -123,8 +123,8 @@
   justify-content: center;
   align-items: center;
   gap: 20px;
-  font-size: 10px;
-  color: rgba(0, 255, 136, 0.5);
+  font-size: var(--font-xs);
+  color: var(--neon-dim);
 }
 .wish-wall-nav {
   cursor: pointer;

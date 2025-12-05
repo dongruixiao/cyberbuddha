@@ -14,9 +14,10 @@ import {
   isNetworkSupported,
   usdToAtomicUnits,
   sanitizeContent,
+  DEFAULT_WISH_CONTENT,
+  MESSAGES,
   type Network,
   type PaymentNetwork,
-  PAYMENT_NETWORKS,
 } from '../shared/types';
 
 // Environment bindings
@@ -57,7 +58,7 @@ app.post('/api/wish', async (c) => {
 
   // Validate server configuration
   if (!address) {
-    console.error('[WISH] ADDRESS environment variable not configured');
+    console.error('[wish] ADDRESS env not configured');
     return c.json<ErrorResponse>({ error: { code: 'NOT_CONFIGURED', message: 'Server not configured' } }, 500);
   }
 
@@ -66,7 +67,7 @@ app.post('/api/wish', async (c) => {
   try {
     rawBody = await c.req.json();
   } catch {
-    console.warn('[WISH] Invalid JSON body received');
+    console.warn('[wish] invalid JSON body');
     return c.json<ErrorResponse>({ error: { code: 'INVALID_BODY', message: 'Invalid request body' } }, 400);
   }
 
@@ -74,7 +75,7 @@ app.post('/api/wish', async (c) => {
   const parseResult = WishRequestSchema.safeParse(rawBody);
   if (!parseResult.success) {
     const errorMessage = parseResult.error.issues[0]?.message || 'Invalid request';
-    console.warn('[WISH] Validation failed:', errorMessage);
+    console.warn('[wish] validation failed:', errorMessage);
     return c.json<ErrorResponse>({ error: { code: 'INVALID_BODY', message: errorMessage } }, 400);
   }
 
@@ -83,25 +84,25 @@ app.post('/api/wish', async (c) => {
   // Validate network
   const network = body.network || defaultNetwork;
   if (!isNetworkSupported(network)) {
-    console.warn(`[WISH] Unsupported network requested: ${network}`);
+    console.warn(`[wish] unsupported network: ${network}`);
     return c.json<ErrorResponse>({ error: { code: 'INVALID_NETWORK', message: `Unsupported network: ${network}` } }, 400);
   }
 
   // Validate amount
   const amount = parseFloat(body.amount);
   if (isNaN(amount) || amount < MIN_AMOUNT) {
-    console.warn(`[WISH] Invalid amount: ${body.amount}`);
+    console.warn(`[wish] invalid amount: ${body.amount}`);
     return c.json<ErrorResponse>({ error: { code: 'INVALID_AMOUNT', message: `Minimum amount is $${MIN_AMOUNT}` } }, 400);
   }
   if (amount > MAX_AMOUNT) {
-    console.warn(`[WISH] Amount exceeds maximum: ${amount}`);
+    console.warn(`[wish] amount exceeds maximum: ${amount}`);
     return c.json<ErrorResponse>({ error: { code: 'INVALID_AMOUNT', message: `Maximum amount is $${MAX_AMOUNT}` } }, 400);
   }
 
   // Get network config
   const networkConfig = NETWORK_CONFIGS[network as PaymentNetwork];
   if (!networkConfig) {
-    console.warn(`[WISH] No USDC address configured for network: ${network}`);
+    console.warn(`[wish] no USDC configured for: ${network}`);
     return c.json<ErrorResponse>({ error: { code: 'UNSUPPORTED_NETWORK', message: 'USDC not available on this network' } }, 400);
   }
 
@@ -127,7 +128,7 @@ app.post('/api/wish', async (c) => {
 
   if (!paymentHeader) {
     // Return 402 Payment Required
-    console.info(`[WISH] Payment required for $${amount} on ${network}`);
+    console.info(`[wish] payment required: $${amount} on ${network}`);
     return c.json({
       x402Version: 1,
       error: 'X-PAYMENT header is required',
@@ -138,11 +139,22 @@ app.post('/api/wish', async (c) => {
   // Process payment
   try {
     // Decode payment payload
-    let paymentPayload;
+    let paymentPayload: {
+      x402Version?: number;
+      scheme?: string;
+      network?: string;
+      payload?: {
+        authorization?: {
+          value?: string;
+          from?: string;
+          to?: string;
+        };
+      };
+    };
     try {
       paymentPayload = JSON.parse(atob(paymentHeader));
     } catch {
-      console.warn('[WISH] Invalid payment header encoding');
+      console.warn('[wish] invalid payment header');
       return c.json({
         x402Version: 1,
         error: 'Invalid payment header',
@@ -150,9 +162,52 @@ app.post('/api/wish', async (c) => {
       }, 402);
     }
 
-    // Verify payment with facilitator
-    console.info(`[WISH] Verifying payment with facilitator for $${amount}`);
-    const verifyResponse = await fetch(`${facilitatorUrl}/verify`, {
+    // Local validation: verify payment amount meets requirement
+    const paymentValue = paymentPayload.payload?.authorization?.value;
+    if (!paymentValue || BigInt(paymentValue) < BigInt(paymentRequirements.maxAmountRequired)) {
+      console.warn(`[wish] insufficient payment: ${paymentValue} < ${paymentRequirements.maxAmountRequired}`);
+      return c.json({
+        x402Version: 1,
+        error: 'Payment amount insufficient',
+        accepts: [paymentRequirements],
+      }, 402);
+    }
+
+    // Local validation: verify recipient matches
+    const paymentTo = paymentPayload.payload?.authorization?.to?.toLowerCase();
+    if (paymentTo !== address.toLowerCase()) {
+      console.warn(`[wish] wrong recipient: ${paymentTo} !== ${address}`);
+      return c.json({
+        x402Version: 1,
+        error: 'Invalid payment recipient',
+        accepts: [paymentRequirements],
+      }, 402);
+    }
+
+    // Helper: fetch with retry (exponential backoff)
+    const fetchWithRetry = async (url: string, options: RequestInit, maxRetries = 3): Promise<Response> => {
+      let lastError: Error | null = null;
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          const response = await fetch(url, options);
+          if (response.ok || response.status < 500) {
+            return response;
+          }
+          lastError = new Error(`HTTP ${response.status}`);
+        } catch (err) {
+          lastError = err instanceof Error ? err : new Error('Network error');
+        }
+        // Exponential backoff: 100ms, 200ms, 400ms
+        if (attempt < maxRetries - 1) {
+          await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempt)));
+        }
+      }
+      throw lastError || new Error('Request failed after retries');
+    };
+
+    // Verify payment with facilitator (with retry)
+    console.info(`[wish] verifying payment: $${amount}`);
+    const verifyResponse = await fetchWithRetry(`${facilitatorUrl}/verify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -163,8 +218,7 @@ app.post('/api/wish', async (c) => {
     });
 
     if (!verifyResponse.ok) {
-      const errorText = await verifyResponse.text();
-      console.error(`[WISH] Verification failed: ${verifyResponse.status}`);
+      console.error(`[wish] verification failed: ${verifyResponse.status}`);
       return c.json({
         x402Version: 1,
         error: 'Payment verification failed',
@@ -175,7 +229,7 @@ app.post('/api/wish', async (c) => {
     const verifyResult = await verifyResponse.json() as { isValid: boolean; invalidReason?: string; payer?: string };
 
     if (!verifyResult.isValid) {
-      console.warn(`[WISH] Payment invalid: ${verifyResult.invalidReason}`);
+      console.warn(`[wish] payment invalid: ${verifyResult.invalidReason}`);
       return c.json({
         x402Version: 1,
         error: verifyResult.invalidReason || 'Payment verification failed',
@@ -184,9 +238,9 @@ app.post('/api/wish', async (c) => {
       }, 402);
     }
 
-    // Settle payment with facilitator
-    console.info(`[WISH] Settling payment from ${verifyResult.payer}`);
-    const settleResponse = await fetch(`${facilitatorUrl}/settle`, {
+    // Settle payment with facilitator (with retry)
+    console.info(`[wish] settling payment from ${verifyResult.payer}`);
+    const settleResponse = await fetchWithRetry(`${facilitatorUrl}/settle`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -197,23 +251,23 @@ app.post('/api/wish', async (c) => {
     });
 
     if (!settleResponse.ok) {
-      console.error(`[WISH] Settlement failed: ${settleResponse.status}`);
+      console.error(`[wish] settlement failed: ${settleResponse.status}`);
       return c.json<ErrorResponse>({ error: { code: 'SETTLE_FAILED', message: 'Settlement failed' } }, 500);
     }
 
     const settleResult = await settleResponse.json() as { success: boolean; transaction?: string; errorReason?: string };
 
     if (!settleResult.success) {
-      console.error(`[WISH] Settlement unsuccessful: ${settleResult.errorReason}`);
+      console.error(`[wish] settlement unsuccessful: ${settleResult.errorReason}`);
       return c.json<ErrorResponse>({ error: { code: 'SETTLE_FAILED', message: settleResult.errorReason || 'Settlement failed' } }, 500);
     }
 
     // Payment successful - save wish to database
-    const wishContent = content || 'May all wishes come true';
+    const wishContent = content || DEFAULT_WISH_CONTENT;
     const txHash = settleResult.transaction || '';
     const payer = verifyResult.payer || '';
 
-    console.info(`[WISH] Payment successful! TX: ${txHash}, Payer: ${payer}, Amount: $${amount}`);
+    console.info(`[wish] payment successful: tx=${txHash}, payer=${payer}, amount=$${amount}`);
 
     // Track if DB save failed
     let dbSaveFailed = false;
@@ -221,29 +275,29 @@ app.post('/api/wish', async (c) => {
       await c.env.DB.prepare(
         'INSERT INTO wishes (tx_hash, payer, amount, content, network, created_at) VALUES (?, ?, ?, ?, ?, ?)'
       ).bind(txHash, payer, amount, wishContent, network, Date.now()).run();
-      console.info(`[WISH] Wish saved to database`);
+      console.info(`[wish] saved to database`);
     } catch (dbErr) {
       // Log but don't fail - payment was successful
-      console.error('[WISH] Failed to save wish to database:', dbErr);
+      console.error('[wish] failed to save to database:', dbErr);
       dbSaveFailed = true;
     }
 
     // Build response with warning if DB save failed
     const response: WishResponse = {
-      message: 'Your prayer has been heard',
+      message: MESSAGES.PRAYER_HEARD,
       blessing: wishContent,
       txHash,
     };
 
     // Add warning if DB save failed (user should know)
     if (dbSaveFailed) {
-      response.warning = 'Payment successful but wish may not appear on wall. TX is your proof of payment.';
+      response.warning = MESSAGES.DB_SAVE_WARNING;
     }
 
     return c.json(response);
 
   } catch (err) {
-    console.error('[WISH] Unexpected error:', err);
+    console.error('[wish] unexpected error:', err);
     return c.json<ErrorResponse>({ error: { code: 'PAYMENT_ERROR', message: 'Payment processing failed' } }, 500);
   }
 });
@@ -268,7 +322,7 @@ app.get('/api/wishes', async (c) => {
 
     return c.json(response);
   } catch (err) {
-    console.error('[WISHES] Failed to fetch wishes:', err);
+    console.error('[wishes] failed to fetch:', err);
     return c.json<ErrorResponse>({ error: { code: 'DB_ERROR', message: 'Failed to fetch wishes' } }, 500);
   }
 });

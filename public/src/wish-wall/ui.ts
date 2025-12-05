@@ -1,5 +1,6 @@
 // Wish wall UI: modal, rendering, pagination
 import { dom } from '../core/dom';
+import { DEFAULT_WISH_PLACEHOLDER } from '../../../shared/types';
 import { loadWishes, formatAddr, formatTime, getTxUrl, WishRecord } from './service';
 
 interface WishWallState {
@@ -13,7 +14,7 @@ const wishWallState: WishWallState = { page: 1, total: 0, perPage: 6, loading: f
 
 function renderWishes(wishes: WishRecord[]): void {
   if (!wishes.length) {
-    dom.wishWallList.innerHTML = '<div class="wish-wall-empty">no wishes yet... be the first!</div>';
+    dom.wishWallList.innerHTML = '<div class="wish-wall-empty">the wall is empty. be the first pilgrim.</div>';
     return;
   }
 
@@ -26,7 +27,7 @@ function renderWishes(wishes: WishRecord[]): void {
           <span class="wish-item-network">${w.network}</span>
         </div>
       </div>
-      <div class="wish-item-content">${w.content || '心诚则灵'}</div>
+      <div class="wish-item-content">${w.content || DEFAULT_WISH_PLACEHOLDER}</div>
       <div class="wish-item-footer">
         <span>${formatTime(w.created_at)}</span>
         ${w.tx_hash ? `<a class="wish-item-tx" href="${getTxUrl(w.network, w.tx_hash)}" target="_blank" rel="noopener">[tx]</a>` : ''}
@@ -56,8 +57,8 @@ async function fetchWishes(page: number = 1): Promise<void> {
     renderWishes(data.wishes);
     updateWishWallPagination();
   } catch (e) {
-    console.error('[WishWall] Failed to load wishes:', e);
-    dom.wishWallList.innerHTML = '<div class="wish-wall-empty">failed to load wishes</div>';
+    console.error('[wish-wall] failed to load:', e);
+    dom.wishWallList.innerHTML = '<div class="wish-wall-empty">karma loading failed. try again when fate permits.</div>';
   } finally {
     wishWallState.loading = false;
   }

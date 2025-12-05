@@ -8,6 +8,7 @@ const DHARMA_DURATION = 10000;
 
 let dharmaAnimating = false;
 let dharmaStart = 0;
+let rafId: number | null = null;
 
 interface DharmaChar {
   text: string;
@@ -19,6 +20,7 @@ interface DharmaRing {
   radius: number;
   speed: number;
   fontSize: number;
+  fontStr: string; // Cached font string
   chars: DharmaChar[];
 }
 
@@ -31,7 +33,8 @@ for (let r = 0; r < ringCount; r++) {
   const circumference = 2 * Math.PI * radius;
   const charCount = Math.floor(circumference / (fontSize * 3.2));
   const speed = (r % 2 === 0 ? 1 : -1) * (0.15 + r * 0.03);
-  const ring: DharmaRing = { radius, speed, fontSize, chars: [] };
+  const fontStr = `300 ${fontSize}px "ZCOOL XiaoWei", "Noto Serif SC", serif`;
+  const ring: DharmaRing = { radius, speed, fontSize, fontStr, chars: [] };
   for (let i = 0; i < charCount; i++) {
     ring.chars.push({
       text: SUTRAS[Math.floor(Math.random() * SUTRAS.length)],
@@ -47,27 +50,38 @@ function drawDharmaWheel(timestamp: number): void {
   const elapsed = timestamp - dharmaStart;
   const progress = Math.min(elapsed / DHARMA_DURATION, 1);
 
-  // Fade in then out
+  // Fade in then out (slower fade-in for smoother appearance)
   let opacity = 1;
-  if (progress < 0.1) {
-    opacity = progress / 0.1;
-  } else if (progress > 0.8) {
-    opacity = (1 - progress) / 0.2;
+  if (progress < 0.2) {
+    opacity = progress / 0.2;  // 20% fade-in
+    opacity = opacity * opacity;  // ease-in curve
+  } else if (progress > 0.75) {
+    opacity = (1 - progress) / 0.25;  // 25% fade-out
   }
 
   ctx.clearRect(0, 0, DHARMA_SIZE, DHARMA_SIZE);
 
   if (opacity <= 0) {
     dharmaAnimating = false;
+    rafId = null;
     return;
   }
 
   ctx.save();
   ctx.globalAlpha = opacity;
 
+  // Set shadow once for all rings (perf optimization)
+  ctx.shadowColor = 'rgba(255, 170, 0, 0.95)';
+  ctx.shadowBlur = 18;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
   // Draw each ring of text
   for (const ring of dharmaRings) {
     const rotation = (elapsed / 1000) * ring.speed;
+
+    // Set font once per ring (perf optimization)
+    ctx.font = ring.fontStr;
 
     for (const char of ring.chars) {
       const angle = char.angle + rotation;
@@ -78,13 +92,8 @@ function drawDharmaWheel(timestamp: number): void {
       ctx.translate(x, y);
       ctx.rotate(angle + Math.PI / 2);
 
-      // Golden glowing text with classic font
-      ctx.font = `300 ${ring.fontSize}px "ZCOOL XiaoWei", "Noto Serif SC", serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = `rgba(200, 160, 50, ${char.opacity * 0.6})`;
-      ctx.shadowColor = 'rgba(180, 140, 30, 0.4)';
-      ctx.shadowBlur = 5;
+      // Golden glowing text
+      ctx.fillStyle = `rgba(255, 180, 50, ${char.opacity * 1.2})`;
       ctx.fillText(char.text, 0, 0);
 
       ctx.restore();
@@ -94,11 +103,16 @@ function drawDharmaWheel(timestamp: number): void {
   ctx.restore();
 
   if (dharmaAnimating) {
-    requestAnimationFrame(drawDharmaWheel);
+    rafId = requestAnimationFrame(drawDharmaWheel);
   }
 }
 
 export function startDharmaWheel(level: number): void {
+  // Cancel any existing animation
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId);
+  }
+
   // level: 1=small, 2=medium, 3=large, 4=maximum
   // Randomize text and adjust brightness based on level
   const brightnessMultiplier = 0.6 + level * 0.15;
@@ -110,5 +124,5 @@ export function startDharmaWheel(level: number): void {
   }
   dharmaAnimating = true;
   dharmaStart = performance.now();
-  requestAnimationFrame(drawDharmaWheel);
+  rafId = requestAnimationFrame(drawDharmaWheel);
 }

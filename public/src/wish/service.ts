@@ -1,5 +1,5 @@
 // Wish service: API calls and payment flow
-import { WishConfig, WishResponse } from '../../../../shared/types';
+import { WishConfig, WishResponse, MESSAGES } from '../../../shared/types';
 import { createPaymentAuth } from '../wallet/payment';
 
 interface PaymentRequirements {
@@ -26,7 +26,7 @@ export async function fetchConfig(): Promise<WishConfig> {
 }
 
 export async function makeWish(amount: number, content: string | undefined, network: string): Promise<WishResponse> {
-  console.log('[Wish] makeWish called:', { amount, content, network });
+  console.log('[wish] makeWish called:', { amount, content, network });
 
   const res = await fetch('/api/wish', {
     method: 'POST',
@@ -34,23 +34,23 @@ export async function makeWish(amount: number, content: string | undefined, netw
     body: JSON.stringify({ amount: amount.toString(), content, network }),
   });
 
-  console.log('[Wish] Initial response status:', res.status);
+  console.log('[wish] initial response:', res.status);
 
   if (res.status !== 402) {
     if (res.ok) return res.json();
     const err = await res.json();
-    console.error('[Wish] Initial request failed:', err);
+    console.error('[wish] initial request failed:', err);
     throw new Error(err.error?.message || 'Request failed');
   }
 
   const data = await res.json() as X402Response;
-  console.log('[Wish] 402 response:', data);
+  console.log('[wish] 402 response:', data);
   const { accepts } = data;
   if (!accepts?.[0]) throw new Error('No payment requirements');
 
-  console.log('[Wish] Creating payment auth for:', accepts[0]);
+  console.log('[wish] creating payment auth for:', accepts[0]);
   const payment = await createPaymentAuth(accepts[0]);
-  console.log('[Wish] Payment auth created');
+  console.log('[wish] payment auth created');
 
   const payRes = await fetch('/api/wish', {
     method: 'POST',
@@ -58,18 +58,18 @@ export async function makeWish(amount: number, content: string | undefined, netw
     body: JSON.stringify({ amount: amount.toString(), content, network }),
   });
 
-  console.log('[Wish] Payment response status:', payRes.status);
+  console.log('[wish] payment response:', payRes.status);
 
   if (!payRes.ok) {
     const err = await payRes.json().catch(() => ({})) as { error?: string | { message?: string } };
-    console.error('[Wish] Payment failed:', err);
+    console.error('[wish] payment failed:', err);
     // Translate error codes to user-friendly messages
     const errorMessages: Record<string, string> = {
-      'insufficient_funds': 'insufficient USDC balance',
-      'invalid_signature': 'signature verification failed',
-      'expired': 'payment authorization expired',
-      'already_used': 'payment already processed',
-      'invalid_amount': 'invalid payment amount',
+      'insufficient_funds': MESSAGES.INSUFFICIENT_BALANCE,
+      'invalid_signature': MESSAGES.SIGNATURE_FAILED,
+      'expired': MESSAGES.PAYMENT_EXPIRED,
+      'already_used': MESSAGES.ALREADY_PROCESSED,
+      'invalid_amount': MESSAGES.INVALID_AMOUNT,
     };
     // Handle both formats: { error: "code" } and { error: { message: "..." } }
     const errorCode = typeof err.error === 'string' ? err.error : '';

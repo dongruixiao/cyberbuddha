@@ -8,6 +8,7 @@ export interface DOMElements {
   wish: HTMLInputElement;
   amountSelect: HTMLElement;
   action: HTMLButtonElement;
+  buddhaWrapper: HTMLElement;
   buddhaLight: HTMLElement;
   dharmaCanvas: HTMLCanvasElement;
   rippleCanvas: HTMLCanvasElement;
@@ -38,6 +39,7 @@ export function initDOM(): void {
     wish: $('wish') as HTMLInputElement,
     amountSelect: $('amount-select')!,
     action: $('action') as HTMLButtonElement,
+    buddhaWrapper: document.querySelector('.buddha-wrapper') as HTMLElement,
     buddhaLight: $('buddha-light')!,
     dharmaCanvas: $('dharma-canvas') as HTMLCanvasElement,
     rippleCanvas: $('ripple-canvas') as HTMLCanvasElement,

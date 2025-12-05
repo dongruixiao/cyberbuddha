@@ -2,6 +2,7 @@
 import { dom } from '../core/dom';
 import { getState, setState, savePreferences, type NetworkType } from '../core/state';
 import { MAINNET_CHAINS, TESTNET_CHAINS } from '../core/constants';
+import { WALLET_NAMES } from '../../../shared/types';
 import { detectWallets } from './provider';
 import { connectWallet, disconnectWallet } from './connect';
 import { addMessage } from '../messages/queue';
@@ -17,7 +18,7 @@ export function updateUI(): void {
     dom.walletStatus.classList.add('connected');
     dom.chainSwitcher.classList.add('connected');
   } else {
-    dom.wallet.textContent = 'connect wallet';
+    dom.wallet.textContent = 'connect';
     dom.walletStatus.classList.remove('connected');
     dom.chainSwitcher.classList.remove('connected');
   }
@@ -111,11 +112,12 @@ export function initWalletUI(): void {
       hideWalletModal();
 
       try {
-        addMessage(`connecting ${walletType}...`);
+        const walletName = WALLET_NAMES[walletType] || walletType;
+        addMessage(`connecting ${walletName}...`);
         await connectWallet(walletType);
         updateUI();
         updateChainDisplay();
-        addMessage(`${walletType} connected (${getState('networkType')})`, 'success');
+        addMessage(`${walletName} connected (${getState('networkType')})`, 'success');
       } catch (e) {
         addMessage((e as Error).message, 'error');
       }

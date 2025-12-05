@@ -32,18 +32,22 @@ export async function tryRestoreWallet(): Promise<void> {
         return;
       }
     } catch (e) {
-      console.log(`[Wallet] Failed to restore ${walletType}:`, e);
+      console.log(`[wallet] failed to restore ${walletType}:`, e);
     }
   }
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every(item => typeof item === 'string');
 }
 
 function setupWalletListeners(provider: NonNullable<Window['ethereum']>): void {
   provider.removeAllListeners?.('accountsChanged');
   provider.removeAllListeners?.('chainChanged');
   provider.on('accountsChanged', (accs: unknown) => {
-    const accounts = accs as string[];
-    setState('address', accounts[0] || null);
-    if (!accounts[0]) setState('walletType', null);
+    if (!isStringArray(accs)) return;
+    setState('address', accs[0] || null);
+    if (!accs[0]) setState('walletType', null);
     updateUI();
   });
   provider.on('chainChanged', () => location.reload());

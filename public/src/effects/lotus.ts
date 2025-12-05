@@ -8,6 +8,11 @@ const LOTUS_DURATION = 10000;
 
 let lotusAnimating = false;
 let lotusStart = 0;
+let rafId: number | null = null;
+
+// Cached font strings (perf optimization)
+const PETAL_FONT = '300 24px "ZCOOL XiaoWei", serif';
+const CENTER_FONT = '300 42px "ZCOOL XiaoWei", serif';
 
 interface LotusPetal {
   angle: number;
@@ -42,6 +47,7 @@ function drawLotus(timestamp: number): void {
 
   if (elapsed > LOTUS_DURATION) {
     lotusAnimating = false;
+    rafId = null;
     return;
   }
 
@@ -62,6 +68,10 @@ function drawLotus(timestamp: number): void {
   ctx.save();
   ctx.translate(LOTUS_CENTER, LOTUS_CENTER);
   ctx.rotate(rotation);
+
+  // Set common text properties once (perf optimization)
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
 
   for (const petal of lotusPetals) {
     const petalTime = elapsed - petal.delay;
@@ -98,64 +108,65 @@ function drawLotus(timestamp: number): void {
       0, 0
     );
 
-    // Petal gradient fill (subtle)
+    // Petal gradient fill (golden transparent)
     const gradient = ctx.createLinearGradient(0, 0, 0, -length);
-    gradient.addColorStop(0, `rgba(255, 180, 200, ${masterAlpha * petal.opacity * 0.25})`);
-    gradient.addColorStop(0.5, `rgba(255, 200, 180, ${masterAlpha * petal.opacity * 0.18})`);
-    gradient.addColorStop(1, `rgba(255, 220, 200, ${masterAlpha * petal.opacity * 0.08})`);
+    gradient.addColorStop(0, `rgba(255, 180, 50, ${masterAlpha * petal.opacity * 0.3})`);
+    gradient.addColorStop(0.5, `rgba(255, 170, 0, ${masterAlpha * petal.opacity * 0.2})`);
+    gradient.addColorStop(1, `rgba(255, 200, 100, ${masterAlpha * petal.opacity * 0.08})`);
 
     ctx.fillStyle = gradient;
-    ctx.shadowColor = 'rgba(255, 150, 180, 0.15)';
-    ctx.shadowBlur = 6;
+    ctx.shadowColor = 'rgba(255, 170, 0, 0.4)';
+    ctx.shadowBlur = 10;
     ctx.fill();
 
     // Petal edge
-    ctx.strokeStyle = `rgba(255, 180, 150, ${masterAlpha * petal.opacity * 0.3})`;
+    ctx.strokeStyle = `rgba(255, 180, 50, ${masterAlpha * petal.opacity * 0.5})`;
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Sanskrit on petal
+    // Sanskrit on petal (golden)
     if (bloomProgress > 0.5) {
       const charAlpha = (bloomProgress - 0.5) * 2;
-      ctx.font = '300 24px "ZCOOL XiaoWei", serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = `rgba(200, 150, 100, ${masterAlpha * charAlpha * petal.opacity * 0.6})`;
-      ctx.shadowColor = 'rgba(180, 120, 60, 0.2)';
-      ctx.shadowBlur = 2;
+      ctx.font = PETAL_FONT;
+      ctx.fillStyle = `rgba(255, 180, 50, ${masterAlpha * charAlpha * petal.opacity * 0.8})`;
+      ctx.shadowColor = 'rgba(255, 170, 0, 0.6)';
+      ctx.shadowBlur = 8;
       ctx.fillText(petal.char, 0, -length * 0.5);
     }
 
     ctx.restore();
   }
 
-  // Lotus center glow
-  const centerGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 60);
-  centerGlow.addColorStop(0, `rgba(255, 220, 150, ${masterAlpha * 0.35})`);
-  centerGlow.addColorStop(0.5, `rgba(255, 200, 100, ${masterAlpha * 0.18})`);
+  // Lotus center glow (golden)
+  const centerGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 70);
+  centerGlow.addColorStop(0, `rgba(255, 180, 50, ${masterAlpha * 0.5})`);
+  centerGlow.addColorStop(0.5, `rgba(255, 170, 0, ${masterAlpha * 0.25})`);
   centerGlow.addColorStop(1, 'transparent');
   ctx.fillStyle = centerGlow;
   ctx.beginPath();
-  ctx.arc(0, 0, 60, 0, Math.PI * 2);
+  ctx.arc(0, 0, 70, 0, Math.PI * 2);
   ctx.fill();
 
-  // Center Om symbol
-  ctx.font = '300 42px "ZCOOL XiaoWei", serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = `rgba(200, 150, 50, ${masterAlpha * 0.5})`;
-  ctx.shadowColor = 'rgba(180, 120, 30, 0.5)';
-  ctx.shadowBlur = 6;
+  // Center Om symbol (golden)
+  ctx.font = CENTER_FONT;
+  ctx.fillStyle = `rgba(255, 180, 50, ${masterAlpha * 0.8})`;
+  ctx.shadowColor = 'rgba(255, 170, 0, 0.8)';
+  ctx.shadowBlur = 12;
   ctx.fillText('ॐ', 0, 0);
 
   ctx.restore();
 
   if (lotusAnimating) {
-    requestAnimationFrame(drawLotus);
+    rafId = requestAnimationFrame(drawLotus);
   }
 }
 
 export function startLotus(level: number): void {
+  // Cancel any existing animation
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId);
+  }
+
   initLotus();
   // Adjust brightness based on level
   const brightnessMultiplier = 0.7 + level * 0.1;
@@ -164,5 +175,5 @@ export function startLotus(level: number): void {
   }
   lotusAnimating = true;
   lotusStart = performance.now();
-  requestAnimationFrame(drawLotus);
+  rafId = requestAnimationFrame(drawLotus);
 }

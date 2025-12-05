@@ -6,7 +6,7 @@ import '../styles/terminal.css';
 import '../styles/effects.css';
 import '../styles/wish-wall.css';
 
-import { state } from './core/state';
+import { setState } from './core/state';
 import { initDOM } from './core/dom';
 import { initWalletUI, updateUI, updateChainDisplay, restoreUIState } from './wallet/ui';
 import { tryRestoreWallet } from './wallet/connect';
@@ -30,7 +30,8 @@ async function init(): Promise<void> {
 
   try {
     // Fetch server config
-    state.config = await fetchConfig();
+    const config = await fetchConfig();
+    setState('config', config);
 
     // Try to restore wallet connection
     await tryRestoreWallet();

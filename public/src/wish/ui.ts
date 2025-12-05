@@ -1,6 +1,6 @@
 // Wish UI: input handlers, amount selection, bless button
 import { dom } from '../core/dom';
-import { state, savePreferences } from '../core/state';
+import { getState, setState, savePreferences } from '../core/state';
 import { addMessage } from '../messages/queue';
 import { makeWish } from './service';
 import { triggerEffect } from '../effects/trigger';
@@ -14,15 +14,17 @@ export function initWishUI(): void {
     if (!opt) return;
     dom.amountSelect.querySelectorAll('.amount-opt').forEach(el => el.classList.remove('selected'));
     opt.classList.add('selected');
-    state.selectedAmount = parseFloat((opt as HTMLElement).dataset.amount!);
+    setState('selectedAmount', parseFloat((opt as HTMLElement).dataset.amount!));
     savePreferences();
   });
 
   // Make wish on action button click
   dom.action.addEventListener('click', async () => {
-    const amount = state.selectedAmount;
+    const amount = getState('selectedAmount');
+    const address = getState('address');
+    const chainIndex = getState('chainIndex');
 
-    if (!state.address) {
+    if (!address) {
       addMessage('please connect wallet first', 'error');
       return;
     }
@@ -30,10 +32,16 @@ export function initWishUI(): void {
     try {
       dom.action.disabled = true;
       addMessage(`preparing $${amount} payment...`);
-      const network = getChains()[state.chainIndex];
+      const network = getChains()[chainIndex];
       const result = await makeWish(amount, dom.wish.value || undefined, network);
       console.log('[Wish] Payment success, triggering effect for amount:', amount, result);
       addMessage(result.message, 'success');
+
+      // Show warning if DB save failed
+      if (result.warning) {
+        addMessage(result.warning, 'error');
+      }
+
       triggerEffect(amount);
       startCoinFlip(amount);
       dom.wish.value = '';

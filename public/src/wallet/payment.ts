@@ -1,6 +1,6 @@
 // EIP-712 payment authorization for x402 protocol
 import { createWalletClient, custom, getAddress } from 'viem';
-import { state } from '../core/state';
+import { getState, setState } from '../core/state';
 import { NETWORK_CONFIG } from '../core/constants';
 import { getProvider } from './provider';
 
@@ -34,25 +34,30 @@ export async function createPaymentAuth(req: PaymentRequirements): Promise<Payme
   try {
     console.log('[Payment] Creating auth for:', req);
     const { asset, payTo, maxAmountRequired, extra, network, maxTimeoutSeconds } = req;
-    const provider = getProvider(state.walletType!);
+
+    const walletType = getState('walletType');
+    const address = getState('address');
+    const currentChainId = getState('chainId');
+
+    const provider = getProvider(walletType!);
     if (!provider) throw new Error('Wallet not connected');
 
     const nonce = '0x' + [...crypto.getRandomValues(new Uint8Array(32))].map(b => b.toString(16).padStart(2, '0')).join('');
     const now = Math.floor(Date.now() / 1000);
     const validAfter = BigInt(now - 600);
     const validBefore = BigInt(now + (maxTimeoutSeconds || 3600));
-    const chainId = NETWORK_CONFIG[network]?.chainId || state.chainId!;
+    const chainId = NETWORK_CONFIG[network]?.chainId || currentChainId!;
 
-    console.log('[Payment] Chain check:', { currentChainId: state.chainId, requiredChainId: chainId, network });
+    console.log('[Payment] Chain check:', { currentChainId, requiredChainId: chainId, network });
 
-    if (state.chainId !== chainId) {
+    if (currentChainId !== chainId) {
       console.log('[Payment] Switching chain to:', chainId);
       await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: `0x${chainId.toString(16)}` }] });
-      state.chainId = chainId;
+      setState('chainId', chainId);
     }
 
     const walletClient = createWalletClient({ chain: { id: chainId, name: network }, transport: custom(provider) });
-    const from = getAddress(state.address!);
+    const from = getAddress(address!);
     const to = getAddress(payTo);
 
     console.log('[Payment] Signing typed data:', { from, to, value: maxAmountRequired, asset, chainId });
@@ -77,8 +82,13 @@ export async function createPaymentAuth(req: PaymentRequirements): Promise<Payme
   } catch (err: unknown) {
     console.error('[Payment] createPaymentAuth error:', err);
     // Handle user rejection
-    const error = err as { code?: number; message?: string };
-    if (error.code === 4001 || error.message?.includes('User rejected') || error.message?.includes('user rejected')) {
+    if (err instanceof Error) {
+      if (err.message?.includes('User rejected') || err.message?.includes('user rejected')) {
+        throw new Error('signature cancelled');
+      }
+    }
+    const errorWithCode = err as { code?: number };
+    if (errorWithCode.code === 4001) {
       throw new Error('signature cancelled');
     }
     throw err;

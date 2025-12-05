@@ -1,12 +1,6 @@
 // Wish service: API calls and payment flow
-import { WishConfig } from '../core/state';
+import { WishConfig, WishResponse } from '../../../../shared/types';
 import { createPaymentAuth } from '../wallet/payment';
-
-interface WishResponse {
-  message: string;
-  blessing: string;
-  txHash?: string;
-}
 
 interface PaymentRequirements {
   asset: string;
@@ -24,7 +18,11 @@ interface X402Response {
 }
 
 export async function fetchConfig(): Promise<WishConfig> {
-  return (await fetch('/api/wish')).json();
+  const response = await fetch('/api/wish');
+  if (!response.ok) {
+    throw new Error('Failed to fetch config');
+  }
+  return response.json();
 }
 
 export async function makeWish(amount: number, content: string | undefined, network: string): Promise<WishResponse> {

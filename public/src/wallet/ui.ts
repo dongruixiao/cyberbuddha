@@ -1,18 +1,19 @@
 // Wallet UI: modal, chain switcher, status display
 import { dom } from '../core/dom';
-import { state, savePreferences } from '../core/state';
+import { getState, setState, savePreferences, type NetworkType } from '../core/state';
 import { MAINNET_CHAINS, TESTNET_CHAINS } from '../core/constants';
 import { detectWallets } from './provider';
 import { connectWallet, disconnectWallet } from './connect';
 import { addMessage } from '../messages/queue';
 
 export function getChains(): string[] {
-  return state.networkType === 'mainnet' ? MAINNET_CHAINS : TESTNET_CHAINS;
+  return getState('networkType') === 'mainnet' ? MAINNET_CHAINS : TESTNET_CHAINS;
 }
 
 export function updateUI(): void {
-  if (state.address) {
-    dom.wallet.textContent = `${state.address.slice(0, 6)}...${state.address.slice(-4)}`;
+  const address = getState('address');
+  if (address) {
+    dom.wallet.textContent = `${address.slice(0, 6)}...${address.slice(-4)}`;
     dom.walletStatus.classList.add('connected');
     dom.chainSwitcher.classList.add('connected');
   } else {
@@ -24,7 +25,8 @@ export function updateUI(): void {
 
 export function updateChainDisplay(): void {
   const chains = getChains();
-  dom.chainName.textContent = chains[state.chainIndex];
+  const chainIndex = getState('chainIndex');
+  dom.chainName.textContent = chains[chainIndex];
 }
 
 export function showWalletModal(): void {
@@ -38,14 +40,17 @@ export function hideWalletModal(): void {
 
 // Restore UI state from saved preferences
 export function restoreUIState(): void {
+  const networkType = getState('networkType');
+  const selectedAmount = getState('selectedAmount');
+
   // Restore network toggle
   dom.networkToggle.forEach(el => {
-    el.classList.toggle('selected', (el as HTMLElement).dataset.network === state.networkType);
+    el.classList.toggle('selected', (el as HTMLElement).dataset.network === networkType);
   });
 
   // Restore amount selection
   dom.amountSelect.querySelectorAll('.amount-opt').forEach(el => {
-    el.classList.toggle('selected', parseFloat((el as HTMLElement).dataset.amount!) === state.selectedAmount);
+    el.classList.toggle('selected', parseFloat((el as HTMLElement).dataset.amount!) === selectedAmount);
   });
 }
 
@@ -53,23 +58,27 @@ export function initWalletUI(): void {
   // Chain navigation
   dom.chainPrev.addEventListener('click', () => {
     const chains = getChains();
-    state.chainIndex = (state.chainIndex - 1 + chains.length) % chains.length;
+    const currentIndex = getState('chainIndex');
+    const newIndex = (currentIndex - 1 + chains.length) % chains.length;
+    setState('chainIndex', newIndex);
     updateChainDisplay();
     savePreferences();
-    addMessage(`switched to ${chains[state.chainIndex]}`);
+    addMessage(`switched to ${chains[newIndex]}`);
   });
 
   dom.chainNext.addEventListener('click', () => {
     const chains = getChains();
-    state.chainIndex = (state.chainIndex + 1) % chains.length;
+    const currentIndex = getState('chainIndex');
+    const newIndex = (currentIndex + 1) % chains.length;
+    setState('chainIndex', newIndex);
     updateChainDisplay();
     savePreferences();
-    addMessage(`switched to ${chains[state.chainIndex]}`);
+    addMessage(`switched to ${chains[newIndex]}`);
   });
 
   // Wallet status click - show modal or disconnect
   dom.walletStatus.addEventListener('click', () => {
-    if (state.address) {
+    if (getState('address')) {
       disconnectWallet();
       addMessage('wallet disconnected');
     } else {
@@ -87,8 +96,8 @@ export function initWalletUI(): void {
     opt.addEventListener('click', () => {
       dom.networkToggle.forEach(el => el.classList.remove('selected'));
       opt.classList.add('selected');
-      state.networkType = (opt as HTMLElement).dataset.network as 'mainnet' | 'testnet';
-      state.chainIndex = 0; // Reset to first chain
+      setState('networkType', (opt as HTMLElement).dataset.network as NetworkType);
+      setState('chainIndex', 0); // Reset to first chain
       savePreferences();
     });
   });
@@ -106,7 +115,7 @@ export function initWalletUI(): void {
         await connectWallet(walletType);
         updateUI();
         updateChainDisplay();
-        addMessage(`${walletType} connected (${state.networkType})`, 'success');
+        addMessage(`${walletType} connected (${getState('networkType')})`, 'success');
       } catch (e) {
         addMessage((e as Error).message, 'error');
       }

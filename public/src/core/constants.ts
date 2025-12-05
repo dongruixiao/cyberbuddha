@@ -1,5 +1,14 @@
-// Network configuration and constants
+// Re-export shared constants
+export {
+  AMOUNTS,
+  AMOUNT_TIERS,
+  NETWORK_CONFIGS,
+  PAYMENT_NETWORKS,
+  type Network,
+  type PaymentNetwork,
+} from '../../../shared/types';
 
+// Frontend-specific network configuration (for chain switching)
 export const NETWORK_CONFIG: Record<string, { chainId: number }> = {
   'base': { chainId: 8453 },
   'base-sepolia': { chainId: 84532 },
@@ -11,8 +20,6 @@ export const NETWORK_CONFIG: Record<string, { chainId: number }> = {
 
 export const MAINNET_CHAINS = ['base', 'polygon', 'avalanche'];
 export const TESTNET_CHAINS = ['base-sepolia', 'polygon-amoy', 'avalanche-fuji'];
-
-export const AMOUNTS = [1.024, 2.048, 4.096, 8.192];
 
 export const BLOCK_EXPLORERS: Record<string, string> = {
   'base': 'https://basescan.org/tx/',

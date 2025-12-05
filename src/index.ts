@@ -73,7 +73,7 @@ app.post('/api/wish', async (c) => {
   // Validate with Zod
   const parseResult = WishRequestSchema.safeParse(rawBody);
   if (!parseResult.success) {
-    const errorMessage = parseResult.error.errors[0]?.message || 'Invalid request';
+    const errorMessage = parseResult.error.issues[0]?.message || 'Invalid request';
     console.warn('[WISH] Validation failed:', errorMessage);
     return c.json<ErrorResponse>({ error: { code: 'INVALID_BODY', message: errorMessage } }, 400);
   }

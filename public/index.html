@@ -598,9 +598,9 @@
       </div>
       <div class="amount-select" id="amount-select">
         <span class="amount-opt" data-amount="1.024">$1.024</span>
-        <span class="amount-opt selected" data-amount="10.24">$10.24</span>
-        <span class="amount-opt" data-amount="102.4">$102.4</span>
-        <span class="amount-opt" data-amount="1024">$1024</span>
+        <span class="amount-opt selected" data-amount="2.048">$2.048</span>
+        <span class="amount-opt" data-amount="4.096">$4.096</span>
+        <span class="amount-opt" data-amount="8.192">$8.192</span>
       </div>
       <button class="ascii-btn" id="action">:: BLESS ::</button>
     </div>
@@ -623,8 +623,8 @@
 
     const MAINNET_CHAINS = ['base', 'polygon', 'avalanche'];
     const TESTNET_CHAINS = ['base-sepolia', 'polygon-amoy', 'avalanche-fuji'];
-    const AMOUNTS = [1.024, 10.24, 102.4, 1024];
-    const state = { address: null, chainId: null, config: null, chainIndex: 0, selectedAmount: 10.24, walletType: null, networkType: 'mainnet' };
+    const AMOUNTS = [1.024, 2.048, 4.096, 8.192];
+    const state = { address: null, chainId: null, config: null, chainIndex: 0, selectedAmount: 2.048, walletType: null, networkType: 'mainnet' };
 
     function getChains() {
       return state.networkType === 'mainnet' ? MAINNET_CHAINS : TESTNET_CHAINS;
@@ -1116,17 +1116,17 @@
 
     // 根据金额触发不同特效（独立）
     // $1.024 = 佛光
-    // $10.24 = 波纹
-    // $102.4 = 莲花绽放
-    // $1024 = 法轮 + 背景变佛经
+    // $2.048 = 波纹
+    // $4.096 = 莲花绽放
+    // $8.192 = 法轮 + 背景变佛经
     function triggerEffect(amount) {
-      if (amount >= 1024) {
+      if (amount >= 8.192) {
         // 法轮
         startDharmaWheel(4);
-      } else if (amount >= 102.4) {
+      } else if (amount >= 4.096) {
         // 莲花绽放
         startLotus(3);
-      } else if (amount >= 10.24) {
+      } else if (amount >= 2.048) {
         // 波纹
         startRipples(2);
       } else {
@@ -1537,7 +1537,7 @@
       }
     }
 
-    function startCoinFlip(amount = 10.24) {
+    function startCoinFlip(amount = 2.048) {
       // 设置目标文字
       for (const sprite of textSprites) {
         const data = sprite._data;
@@ -1545,7 +1545,7 @@
         data.is1024 = Math.random() < 0.5;
         data.sutra = BG_SUTRAS[Math.floor(Math.random() * BG_SUTRAS.length)];
 
-        if (amount >= 1024) {
+        if (amount >= 8.192) {
           data.targetText = `  ${data.sutra}  `;
         } else {
           data.targetText = data.is1024 ? '1024' : 'x402';

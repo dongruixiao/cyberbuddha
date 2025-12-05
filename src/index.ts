@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import type { Env, WishRequest, WishResponse, WishConfig, ErrorResponse } from './types';
+import type { Env, WishRequest, WishResponse, WishConfig, ErrorResponse, WishRecord, WishListResponse } from './types';
 import {
   FACILITATOR_URL,
   MIN_AMOUNT,
@@ -161,11 +161,24 @@ app.post('/api/wish', async (c) => {
       return c.json<ErrorResponse>({ error: { code: 'SETTLE_FAILED', message: settleResult.errorReason || 'Settlement failed' } }, 500);
     }
 
-    // Success!
+    // Success! Save wish to D1
     const wish = body.content || '心诚则灵';
+    const txHash = settleResult.transaction || '';
+    const payer = verifyResult.payer || '';
+
+    try {
+      await c.env.DB.prepare(
+        'INSERT INTO wishes (tx_hash, payer, amount, content, network, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+      ).bind(txHash, payer, amount, wish, network, Date.now()).run();
+    } catch (dbErr) {
+      console.error('Failed to save wish:', dbErr);
+      // Don't fail the request if DB write fails
+    }
+
     const response: WishResponse = {
       message: '香已点燃，佛祖已收到你的心意',
       blessing: `🙏 ${wish} 🙏`,
+      txHash,
     };
 
     return c.json(response);
@@ -173,6 +186,31 @@ app.post('/api/wish', async (c) => {
   } catch (err) {
     console.error('Payment error:', err);
     return c.json<ErrorResponse>({ error: { code: 'PAYMENT_ERROR', message: 'Payment processing failed' } }, 500);
+  }
+});
+
+// Get wish wall
+app.get('/api/wishes', async (c) => {
+  const limit = Math.min(parseInt(c.req.query('limit') || '20'), 100);
+  const offset = parseInt(c.req.query('offset') || '0');
+
+  try {
+    const [wishesResult, countResult] = await Promise.all([
+      c.env.DB.prepare('SELECT * FROM wishes ORDER BY created_at DESC LIMIT ? OFFSET ?')
+        .bind(limit, offset)
+        .all<WishRecord>(),
+      c.env.DB.prepare('SELECT COUNT(*) as total FROM wishes').first<{ total: number }>(),
+    ]);
+
+    const response: WishListResponse = {
+      wishes: wishesResult.results || [],
+      total: countResult?.total || 0,
+    };
+
+    return c.json(response);
+  } catch (err) {
+    console.error('Failed to fetch wishes:', err);
+    return c.json<ErrorResponse>({ error: { code: 'DB_ERROR', message: 'Failed to fetch wishes' } }, 500);
   }
 });
 

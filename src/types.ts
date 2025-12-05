@@ -24,6 +24,7 @@ export interface WishRequest {
 export interface WishResponse {
   message: string;
   blessing: string;
+  txHash?: string;
 }
 
 /** Error response */
@@ -47,4 +48,22 @@ export interface Env {
   ADDRESS: string;
   NETWORK: Network;
   FACILITATOR_URL?: string;
+  DB: D1Database;
+}
+
+/** Wish record stored in D1 */
+export interface WishRecord {
+  id: number;
+  tx_hash: string;
+  payer: string;
+  amount: number;
+  content: string;
+  network: string;
+  created_at: number;
+}
+
+/** GET /api/wishes response */
+export interface WishListResponse {
+  wishes: WishRecord[];
+  total: number;
 }

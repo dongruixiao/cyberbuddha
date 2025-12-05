@@ -10,6 +10,12 @@ routes = [
 [vars]
 NETWORK = "base-sepolia"
 
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "cyberbuddha-wishes"
+database_id = "72784d38-dfc3-44b7-a937-44a1100233b1"
+
 # Static assets
 [assets]
 directory = "./public"

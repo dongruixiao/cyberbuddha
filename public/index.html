@@ -521,6 +521,150 @@
     .btn.gold { border-color: var(--gold); color: var(--gold); }
     .btn.gold:hover { background: rgba(255, 170, 0, 0.1); box-shadow: 0 0 15px rgba(255, 170, 0, 0.3); }
 
+    /* Wish Wall Link */
+    .wish-wall-link {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: rgba(102, 102, 102, 0.6);
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+      z-index: 100;
+    }
+    .wish-wall-link:hover {
+      color: #888;
+      text-shadow: 0 0 6px rgba(136, 136, 136, 0.5);
+    }
+
+    /* Wish Wall Modal */
+    .wish-wall-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .wish-wall-modal.show { display: flex; }
+    .wish-wall-content {
+      background: #0a0a0a;
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      padding: 24px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 40px rgba(0, 255, 136, 0.1);
+    }
+    .wish-wall-header {
+      color: var(--neon);
+      font-size: 12px;
+      text-align: center;
+      letter-spacing: 3px;
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px var(--neon);
+    }
+    .wish-wall-list {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 16px;
+    }
+    .wish-wall-empty {
+      color: rgba(0, 255, 136, 0.4);
+      text-align: center;
+      padding: 40px 0;
+      font-size: 11px;
+    }
+    .wish-item {
+      border: 1px solid rgba(0, 255, 136, 0.2);
+      padding: 12px;
+      margin-bottom: 10px;
+      font-size: 10px;
+      background: rgba(0, 255, 136, 0.02);
+    }
+    .wish-item:hover {
+      border-color: rgba(0, 255, 136, 0.4);
+      background: rgba(0, 255, 136, 0.05);
+    }
+    .wish-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      color: rgba(0, 255, 136, 0.6);
+    }
+    .wish-item-addr {
+      font-family: monospace;
+    }
+    .wish-item-meta {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .wish-item-amount {
+      color: var(--gold);
+    }
+    .wish-item-network {
+      color: rgba(0, 255, 136, 0.5);
+      font-size: 9px;
+    }
+    .wish-item-content {
+      color: var(--neon);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    .wish-item-content::before {
+      content: '> ';
+      color: rgba(0, 255, 136, 0.4);
+    }
+    .wish-item-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: rgba(0, 255, 136, 0.4);
+      font-size: 9px;
+    }
+    .wish-item-tx {
+      color: rgba(0, 255, 136, 0.5);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .wish-item-tx:hover {
+      color: var(--neon);
+      text-shadow: 0 0 6px var(--neon);
+    }
+    .wish-wall-footer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      font-size: 10px;
+      color: rgba(0, 255, 136, 0.5);
+    }
+    .wish-wall-nav {
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .wish-wall-nav:hover {
+      color: var(--neon);
+      text-shadow: 0 0 6px var(--neon);
+    }
+    .wish-wall-nav.disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    .wish-wall-page {
+      color: var(--neon);
+    }
+
   </style>
 </head>
 <body>
@@ -540,6 +684,22 @@
   </div>
 
   <div class="msg-queue" id="msg-queue"></div>
+
+  <!-- Wish Wall Link -->
+  <div class="wish-wall-link" id="wish-wall-link">[ WISH WALL ]</div>
+
+  <!-- Wish Wall Modal -->
+  <div class="wish-wall-modal" id="wish-wall-modal">
+    <div class="wish-wall-content">
+      <div class="wish-wall-header">:: WISH WALL ::</div>
+      <div class="wish-wall-list" id="wish-wall-list"></div>
+      <div class="wish-wall-footer">
+        <span class="wish-wall-nav" id="wish-wall-prev">« prev</span>
+        <span class="wish-wall-page" id="wish-wall-page">1/1</span>
+        <span class="wish-wall-nav" id="wish-wall-next">next »</span>
+      </div>
+    </div>
+  </div>
 
   <!-- Wallet Selection Modal -->
   <div class="wallet-modal" id="wallet-modal">
@@ -624,7 +784,28 @@
     const MAINNET_CHAINS = ['base', 'polygon', 'avalanche'];
     const TESTNET_CHAINS = ['base-sepolia', 'polygon-amoy', 'avalanche-fuji'];
     const AMOUNTS = [1.024, 2.048, 4.096, 8.192];
-    const state = { address: null, chainId: null, config: null, chainIndex: 0, selectedAmount: 2.048, walletType: null, networkType: 'mainnet' };
+
+    // Load saved preferences from localStorage
+    const savedNetworkType = localStorage.getItem('cb_networkType') || 'mainnet';
+    const savedChainIndex = parseInt(localStorage.getItem('cb_chainIndex') || '0');
+    const savedAmount = parseFloat(localStorage.getItem('cb_amount') || '2.048');
+
+    const state = {
+      address: null,
+      chainId: null,
+      config: null,
+      chainIndex: savedChainIndex,
+      selectedAmount: AMOUNTS.includes(savedAmount) ? savedAmount : 2.048,
+      walletType: null,
+      networkType: savedNetworkType
+    };
+
+    // Save preferences to localStorage
+    function savePreferences() {
+      localStorage.setItem('cb_networkType', state.networkType);
+      localStorage.setItem('cb_chainIndex', state.chainIndex.toString());
+      localStorage.setItem('cb_amount', state.selectedAmount.toString());
+    }
 
     function getChains() {
       return state.networkType === 'mainnet' ? MAINNET_CHAINS : TESTNET_CHAINS;
@@ -648,7 +829,13 @@
       walletModal: $('wallet-modal'),
       optMetamask: $('opt-metamask'),
       optPhantom: $('opt-phantom'),
-      networkToggle: document.querySelectorAll('.network-opt')
+      networkToggle: document.querySelectorAll('.network-opt'),
+      wishWallLink: $('wish-wall-link'),
+      wishWallModal: $('wish-wall-modal'),
+      wishWallList: $('wish-wall-list'),
+      wishWallPage: $('wish-wall-page'),
+      wishWallPrev: $('wish-wall-prev'),
+      wishWallNext: $('wish-wall-next'),
     };
 
     // Wallet providers
@@ -688,6 +875,7 @@
       dom.amountSelect.querySelectorAll('.amount-opt').forEach(el => el.classList.remove('selected'));
       opt.classList.add('selected');
       state.selectedAmount = parseFloat(opt.dataset.amount);
+      savePreferences();
     });
 
     // Message queue system
@@ -1317,6 +1505,7 @@
       const chains = getChains();
       state.chainIndex = (state.chainIndex - 1 + chains.length) % chains.length;
       updateChainDisplay();
+      savePreferences();
       addMessage(`switched to ${chains[state.chainIndex]}`);
     });
 
@@ -1324,6 +1513,7 @@
       const chains = getChains();
       state.chainIndex = (state.chainIndex + 1) % chains.length;
       updateChainDisplay();
+      savePreferences();
       addMessage(`switched to ${chains[state.chainIndex]}`);
     });
 
@@ -1350,6 +1540,7 @@
         opt.classList.add('selected');
         state.networkType = opt.dataset.network;
         state.chainIndex = 0; // Reset to first chain
+        savePreferences();
       });
     });
 
@@ -1566,14 +1757,135 @@
       }
     });
 
+    // Restore UI state from saved preferences
+    function restoreUIState() {
+      // Restore network toggle
+      dom.networkToggle.forEach(el => {
+        el.classList.toggle('selected', el.dataset.network === state.networkType);
+      });
+
+      // Restore amount selection
+      dom.amountSelect.querySelectorAll('.amount-opt').forEach(el => {
+        el.classList.toggle('selected', parseFloat(el.dataset.amount) === state.selectedAmount);
+      });
+    }
+
     (async () => {
       try {
         state.config = await fetchConfig();
         await tryRestoreWallet();
+        restoreUIState();
         updateUI();
         updateChainDisplay();
       } catch { addMessage('failed to load config', 'error'); }
     })();
+
+    // ========== Wish Wall ==========
+    const BLOCK_EXPLORERS = {
+      'base': 'https://basescan.org/tx/',
+      'base-sepolia': 'https://sepolia.basescan.org/tx/',
+      'polygon': 'https://polygonscan.com/tx/',
+      'polygon-amoy': 'https://amoy.polygonscan.com/tx/',
+      'avalanche': 'https://snowtrace.io/tx/',
+      'avalanche-fuji': 'https://testnet.snowtrace.io/tx/',
+    };
+
+    const wishWallState = { page: 1, total: 0, perPage: 6, loading: false };
+
+    function formatAddr(addr) {
+      if (!addr) return '0x????...????';
+      return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+    }
+
+    function formatTime(ts) {
+      const d = new Date(ts);
+      return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function getTxUrl(network, txHash) {
+      const base = BLOCK_EXPLORERS[network] || BLOCK_EXPLORERS['base-sepolia'];
+      return base + txHash;
+    }
+
+    function renderWishes(wishes) {
+      if (!wishes.length) {
+        dom.wishWallList.innerHTML = '<div class="wish-wall-empty">no wishes yet... be the first!</div>';
+        return;
+      }
+
+      dom.wishWallList.innerHTML = wishes.map(w => `
+        <div class="wish-item">
+          <div class="wish-item-header">
+            <span class="wish-item-addr">${formatAddr(w.payer)}</span>
+            <div class="wish-item-meta">
+              <span class="wish-item-amount">$${w.amount}</span>
+              <span class="wish-item-network">${w.network}</span>
+            </div>
+          </div>
+          <div class="wish-item-content">${w.content || '心诚则灵'}</div>
+          <div class="wish-item-footer">
+            <span>${formatTime(w.created_at)}</span>
+            ${w.tx_hash ? `<a class="wish-item-tx" href="${getTxUrl(w.network, w.tx_hash)}" target="_blank" rel="noopener">[tx]</a>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateWishWallPagination() {
+      const totalPages = Math.max(1, Math.ceil(wishWallState.total / wishWallState.perPage));
+      dom.wishWallPage.textContent = `${wishWallState.page}/${totalPages}`;
+
+      dom.wishWallPrev.classList.toggle('disabled', wishWallState.page <= 1);
+      dom.wishWallNext.classList.toggle('disabled', wishWallState.page >= totalPages);
+    }
+
+    async function loadWishes(page = 1) {
+      if (wishWallState.loading) return;
+      wishWallState.loading = true;
+
+      try {
+        const offset = (page - 1) * wishWallState.perPage;
+        const res = await fetch(`/api/wishes?limit=${wishWallState.perPage}&offset=${offset}`);
+        const data = await res.json();
+
+        wishWallState.page = page;
+        wishWallState.total = data.total;
+
+        renderWishes(data.wishes);
+        updateWishWallPagination();
+      } catch (e) {
+        console.error('Failed to load wishes:', e);
+        dom.wishWallList.innerHTML = '<div class="wish-wall-empty">failed to load wishes</div>';
+      } finally {
+        wishWallState.loading = false;
+      }
+    }
+
+    function showWishWall() {
+      dom.wishWallModal.classList.add('show');
+      loadWishes(1);
+    }
+
+    function hideWishWall() {
+      dom.wishWallModal.classList.remove('show');
+    }
+
+    // Wish wall event listeners
+    dom.wishWallLink.addEventListener('click', showWishWall);
+    dom.wishWallModal.addEventListener('click', (e) => {
+      if (e.target === dom.wishWallModal) hideWishWall();
+    });
+    dom.wishWallPrev.addEventListener('click', () => {
+      if (wishWallState.page > 1 && !wishWallState.loading) {
+        loadWishes(wishWallState.page - 1);
+      }
+    });
+    dom.wishWallNext.addEventListener('click', () => {
+      const totalPages = Math.ceil(wishWallState.total / wishWallState.perPage);
+      if (wishWallState.page < totalPages && !wishWallState.loading) {
+        loadWishes(wishWallState.page + 1);
+      }
+    });
   </script>
 </body>
 </html>

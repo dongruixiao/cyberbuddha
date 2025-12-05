@@ -1,0 +1,97 @@
+/* Terminal input, buttons, and amount selection */
+.terminal {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.wish-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(0, 255, 136, 0.4);
+  color: var(--neon);
+  font-family: inherit;
+  font-size: 14px;
+  padding: 8px 0;
+  width: 280px;
+  outline: none;
+  text-align: center;
+  text-shadow: 0 0 8px var(--neon);
+}
+.wish-input:focus { border-color: #00ff88; }
+.wish-input::placeholder { color: #667; text-shadow: none; }
+
+.hint {
+  margin-top: 18px;
+  font-size: 11px;
+  color: #667;
+}
+
+.amount-inline {
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed #556;
+  color: #667;
+  font-family: inherit;
+  font-size: 11px;
+  width: 28px;
+  text-align: center;
+  outline: none;
+}
+.amount-inline:focus { color: var(--gold); border-color: var(--gold); }
+
+.amount-select {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.amount-opt {
+  color: #556;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: all 0.2s;
+  font-size: 11px;
+}
+
+.amount-opt:hover {
+  color: var(--gold);
+  text-shadow: 0 0 10px var(--gold), 0 0 20px rgba(255, 170, 0, 0.4);
+}
+
+.amount-opt.selected {
+  color: var(--gold);
+  text-shadow: 0 0 8px var(--gold), 0 0 15px rgba(255, 170, 0, 0.3);
+}
+
+.ascii-btn {
+  margin-top: 18px;
+  background: transparent;
+  border: none;
+  color: var(--neon);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  text-shadow: 0 0 10px var(--neon);
+  transition: all 0.3s;
+  padding: 0;
+}
+.ascii-btn:hover { text-shadow: 0 0 20px var(--neon), 0 0 30px var(--neon); }
+.ascii-btn:disabled { opacity: 0.3; cursor: not-allowed; text-shadow: none; }
+
+.btn {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--neon);
+  color: var(--neon);
+  font-family: inherit;
+  font-size: 10px;
+  cursor: pointer;
+  border-radius: 0;
+  transition: all 0.3s;
+}
+
+.btn:hover { background: rgba(191, 0, 255, 0.1); box-shadow: 0 0 15px rgba(191, 0, 255, 0.3); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn.gold { border-color: var(--gold); color: var(--gold); }
+.btn.gold:hover { background: rgba(255, 170, 0, 0.1); box-shadow: 0 0 15px rgba(255, 170, 0, 0.3); }

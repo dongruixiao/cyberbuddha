@@ -1,0 +1,12 @@
+/* Design tokens and CSS custom properties */
+:root {
+  --neon-start: #00ff88;
+  --neon-end: #00d4ff;
+  --neon: #00ff88;
+  --neon-dim: #00ff8866;
+  --gold: #ffaa00;
+  --bg: #0a0a0a;
+  --flame: #ff6600;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }

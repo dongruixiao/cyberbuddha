@@ -16,6 +16,6 @@ binding = "DB"
 database_name = "cyberbuddha-wishes"
 database_id = "72784d38-dfc3-44b7-a937-44a1100233b1"
 
-# Static assets
+# Static assets (built by Vite)
 [assets]
-directory = "./public"
+directory = "./dist"

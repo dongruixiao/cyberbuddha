@@ -4,6 +4,7 @@ import type { Env, WishRequest, WishResponse, WishConfig, ErrorResponse, WishRec
 import {
   FACILITATOR_URL,
   MIN_AMOUNT,
+  MAX_AMOUNT,
   USDC_ADDRESSES,
   isNetworkSupported,
   usdToAtomicUnits,
@@ -11,13 +12,13 @@ import {
 
 const app = new Hono<{ Bindings: Env }>();
 
-// CORS
+// CORS middleware
 app.use('*', cors({ origin: '*', exposeHeaders: ['X-PAYMENT-RESPONSE'] }));
 
-// Health check
-app.get('/api/health', (c) => c.json({ status: 'ok', message: '佛祖在线' }));
+// Health check endpoint
+app.get('/api/health', (c) => c.json({ status: 'ok', message: 'Cyber Buddha is online' }));
 
-// Get wish config
+// Get wish configuration
 app.get('/api/wish', (c) => {
   const network = c.env.NETWORK || 'base-sepolia';
   const config: WishConfig = {
@@ -35,53 +36,71 @@ app.post('/api/wish', async (c) => {
   const defaultNetwork = c.env.NETWORK || 'base-sepolia';
   const facilitatorUrl = c.env.FACILITATOR_URL || FACILITATOR_URL;
 
+  // Validate server configuration
   if (!address) {
-    return c.json<ErrorResponse>({ error: { code: 'NOT_CONFIGURED', message: 'ADDRESS not configured' } }, 500);
+    console.error('[WISH] ADDRESS environment variable not configured');
+    return c.json<ErrorResponse>({ error: { code: 'NOT_CONFIGURED', message: 'Server not configured' } }, 500);
   }
 
-  // Parse request body
+  // Parse and validate request body
   let body: WishRequest;
   try {
     body = await c.req.json<WishRequest>();
   } catch {
+    console.warn('[WISH] Invalid JSON body received');
     return c.json<ErrorResponse>({ error: { code: 'INVALID_BODY', message: 'Invalid request body' } }, 400);
   }
 
-  // Use network from request body or fall back to env
+  // Validate network
   const network = body.network || defaultNetwork;
-
   if (!isNetworkSupported(network)) {
+    console.warn(`[WISH] Unsupported network requested: ${network}`);
     return c.json<ErrorResponse>({ error: { code: 'INVALID_NETWORK', message: `Unsupported network: ${network}` } }, 400);
   }
 
+  // Validate amount
   const amount = parseFloat(body.amount);
   if (isNaN(amount) || amount < MIN_AMOUNT) {
+    console.warn(`[WISH] Invalid amount: ${body.amount}`);
     return c.json<ErrorResponse>({ error: { code: 'INVALID_AMOUNT', message: `Minimum amount is $${MIN_AMOUNT}` } }, 400);
   }
+  if (amount > MAX_AMOUNT) {
+    console.warn(`[WISH] Amount exceeds maximum: ${amount}`);
+    return c.json<ErrorResponse>({ error: { code: 'INVALID_AMOUNT', message: `Maximum amount is $${MAX_AMOUNT}` } }, 400);
+  }
 
+  // Validate USDC address exists for network
   const asset = USDC_ADDRESSES[network];
   if (!asset) {
+    console.warn(`[WISH] No USDC address configured for network: ${network}`);
     return c.json<ErrorResponse>({ error: { code: 'UNSUPPORTED_NETWORK', message: 'USDC not available on this network' } }, 400);
   }
+
+  // Sanitize content (prevent XSS, limit length)
+  const content = body.content
+    ? body.content.slice(0, 200).replace(/[<>]/g, '')
+    : undefined;
+
+  // Build payment requirements
+  const paymentRequirements = {
+    scheme: 'exact' as const,
+    network,
+    maxAmountRequired: usdToAtomicUnits(amount),
+    resource: new URL('/api/wish', c.req.url).href,
+    description: `Wish - $${amount}`,
+    mimeType: 'application/json',
+    payTo: address,
+    maxTimeoutSeconds: 300,
+    asset,
+    extra: { name: 'USDC', version: '2' },
+  };
 
   // Check for payment header
   const paymentHeader = c.req.header('X-PAYMENT');
 
   if (!paymentHeader) {
     // Return 402 Payment Required
-    const paymentRequirements = {
-      scheme: 'exact' as const,
-      network,
-      maxAmountRequired: usdToAtomicUnits(amount),
-      resource: new URL('/api/wish', c.req.url).href,
-      description: `许愿 - $${amount}`,
-      mimeType: 'application/json',
-      payTo: address,
-      maxTimeoutSeconds: 300,
-      asset,
-      extra: { name: 'USDC', version: '2' },
-    };
-
+    console.info(`[WISH] Payment required for $${amount} on ${network}`);
     return c.json({
       x402Version: 1,
       error: 'X-PAYMENT header is required',
@@ -89,24 +108,23 @@ app.post('/api/wish', async (c) => {
     }, 402);
   }
 
-  // Verify and settle payment with facilitator
+  // Process payment
   try {
-    const paymentPayload = JSON.parse(atob(paymentHeader));
+    // Decode payment payload
+    let paymentPayload;
+    try {
+      paymentPayload = JSON.parse(atob(paymentHeader));
+    } catch {
+      console.warn('[WISH] Invalid payment header encoding');
+      return c.json({
+        x402Version: 1,
+        error: 'Invalid payment header',
+        accepts: [paymentRequirements],
+      }, 402);
+    }
 
-    const paymentRequirements = {
-      scheme: 'exact' as const,
-      network,
-      maxAmountRequired: usdToAtomicUnits(amount),
-      resource: new URL('/api/wish', c.req.url).href,
-      description: `许愿 - $${amount}`,
-      mimeType: 'application/json',
-      payTo: address,
-      maxTimeoutSeconds: 300,
-      asset,
-      extra: { name: 'USDC', version: '2' },
-    };
-
-    // Verify payment
+    // Verify payment with facilitator
+    console.info(`[WISH] Verifying payment with facilitator for $${amount}`);
     const verifyResponse = await fetch(`${facilitatorUrl}/verify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -119,7 +137,7 @@ app.post('/api/wish', async (c) => {
 
     if (!verifyResponse.ok) {
       const errorText = await verifyResponse.text();
-      console.error('Verify failed:', verifyResponse.status, errorText);
+      console.error(`[WISH] Verification failed: ${verifyResponse.status} - ${errorText}`);
       return c.json({
         x402Version: 1,
         error: `Verification failed: ${verifyResponse.status}`,
@@ -130,6 +148,7 @@ app.post('/api/wish', async (c) => {
     const verifyResult = await verifyResponse.json() as { isValid: boolean; invalidReason?: string; payer?: string };
 
     if (!verifyResult.isValid) {
+      console.warn(`[WISH] Payment invalid: ${verifyResult.invalidReason}`);
       return c.json({
         x402Version: 1,
         error: verifyResult.invalidReason || 'Payment verification failed',
@@ -138,7 +157,8 @@ app.post('/api/wish', async (c) => {
       }, 402);
     }
 
-    // Settle payment
+    // Settle payment with facilitator
+    console.info(`[WISH] Settling payment from ${verifyResult.payer}`);
     const settleResponse = await fetch(`${facilitatorUrl}/settle`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -151,48 +171,52 @@ app.post('/api/wish', async (c) => {
 
     if (!settleResponse.ok) {
       const errorText = await settleResponse.text();
-      console.error('Settle failed:', settleResponse.status, errorText);
-      return c.json<ErrorResponse>({ error: { code: 'SETTLE_FAILED', message: `Settlement failed: ${settleResponse.status}` } }, 500);
+      console.error(`[WISH] Settlement failed: ${settleResponse.status} - ${errorText}`);
+      return c.json<ErrorResponse>({ error: { code: 'SETTLE_FAILED', message: 'Settlement failed' } }, 500);
     }
 
     const settleResult = await settleResponse.json() as { success: boolean; transaction?: string; errorReason?: string };
 
     if (!settleResult.success) {
+      console.error(`[WISH] Settlement unsuccessful: ${settleResult.errorReason}`);
       return c.json<ErrorResponse>({ error: { code: 'SETTLE_FAILED', message: settleResult.errorReason || 'Settlement failed' } }, 500);
     }
 
-    // Success! Save wish to D1
-    const wish = body.content || '心诚则灵';
+    // Payment successful - save wish to database
+    const wishContent = content || 'May all wishes come true';
     const txHash = settleResult.transaction || '';
     const payer = verifyResult.payer || '';
+
+    console.info(`[WISH] Payment successful! TX: ${txHash}, Payer: ${payer}, Amount: $${amount}`);
 
     try {
       await c.env.DB.prepare(
         'INSERT INTO wishes (tx_hash, payer, amount, content, network, created_at) VALUES (?, ?, ?, ?, ?, ?)'
-      ).bind(txHash, payer, amount, wish, network, Date.now()).run();
+      ).bind(txHash, payer, amount, wishContent, network, Date.now()).run();
+      console.info(`[WISH] Wish saved to database`);
     } catch (dbErr) {
-      console.error('Failed to save wish:', dbErr);
-      // Don't fail the request if DB write fails
+      // Log but don't fail - payment was successful
+      console.error('[WISH] Failed to save wish to database:', dbErr);
     }
 
     const response: WishResponse = {
-      message: '香已点燃，佛祖已收到你的心意',
-      blessing: `🙏 ${wish} 🙏`,
+      message: 'Your prayer has been heard',
+      blessing: wishContent,
       txHash,
     };
 
     return c.json(response);
 
   } catch (err) {
-    console.error('Payment error:', err);
+    console.error('[WISH] Unexpected error:', err);
     return c.json<ErrorResponse>({ error: { code: 'PAYMENT_ERROR', message: 'Payment processing failed' } }, 500);
   }
 });
 
-// Get wish wall
+// Get wish wall (paginated)
 app.get('/api/wishes', async (c) => {
-  const limit = Math.min(parseInt(c.req.query('limit') || '20'), 100);
-  const offset = parseInt(c.req.query('offset') || '0');
+  const limit = Math.min(Math.max(parseInt(c.req.query('limit') || '20'), 1), 100);
+  const offset = Math.max(parseInt(c.req.query('offset') || '0'), 0);
 
   try {
     const [wishesResult, countResult] = await Promise.all([
@@ -209,7 +233,7 @@ app.get('/api/wishes', async (c) => {
 
     return c.json(response);
   } catch (err) {
-    console.error('Failed to fetch wishes:', err);
+    console.error('[WISHES] Failed to fetch wishes:', err);
     return c.json<ErrorResponse>({ error: { code: 'DB_ERROR', message: 'Failed to fetch wishes' } }, 500);
   }
 });

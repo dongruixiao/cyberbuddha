@@ -1,0 +1,136 @@
+/* Buddha display, canvas containers, and animations */
+.buddha-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.buddha-light {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(255, 215, 0, 0.3) 0%,
+    rgba(255, 170, 0, 0.15) 40%,
+    transparent 70%);
+  pointer-events: none;
+  opacity: 0;
+  z-index: -1;
+}
+
+/* Dharma Wheel Canvas */
+#dharma-canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Sanskrit Ripple Canvas */
+#ripple-canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Lotus Bloom Canvas */
+#lotus-canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.buddha-light.active {
+  animation: halo-burst 10s ease-out forwards;
+}
+
+@keyframes halo-burst {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  25% {
+    width: 900px;
+    height: 900px;
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    width: 1100px;
+    height: 1100px;
+    opacity: 0;
+  }
+}
+
+.buddha {
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: pre;
+  background: linear-gradient(135deg,
+    #ff0080 0%,
+    #ff00ff 15%,
+    #8000ff 30%,
+    #00d4ff 45%,
+    #bf00ff 60%,
+    #ffff00 75%,
+    #ff8000 90%,
+    #ff0080 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 8px #ff00ff) drop-shadow(0 0 15px #00d4ff);
+  animation: rainbow-flow 4s ease-in-out infinite;
+  display: inline-block;
+  text-align: left;
+  user-select: none;
+}
+
+.title {
+  font-size: 12px;
+  margin-top: 12px;
+  letter-spacing: 2px;
+  background: linear-gradient(90deg,
+    #bf00ff 0%,
+    #00d4ff 25%,
+    #ff00ff 50%,
+    #ff0080 75%,
+    #ffff00 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 10px #00d4ff);
+  animation: rainbow-slide 3s linear infinite;
+  user-select: none;
+}
+
+@keyframes rainbow-flow {
+  0% { background-position: 0% 0%; filter: drop-shadow(0 0 8px #ff0080) drop-shadow(0 0 15px #ff00ff); }
+  25% { background-position: 50% 50%; filter: drop-shadow(0 0 8px #8000ff) drop-shadow(0 0 15px #00d4ff); }
+  50% { background-position: 100% 100%; filter: drop-shadow(0 0 8px #bf00ff) drop-shadow(0 0 15px #ffff00); }
+  75% { background-position: 50% 50%; filter: drop-shadow(0 0 8px #ff8000) drop-shadow(0 0 15px #ff0080); }
+  100% { background-position: 0% 0%; filter: drop-shadow(0 0 8px #ff0080) drop-shadow(0 0 15px #ff00ff); }
+}
+
+@keyframes rainbow-slide {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}

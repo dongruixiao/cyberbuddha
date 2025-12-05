@@ -6,6 +6,9 @@ export const FACILITATOR_URL = 'https://facilitator.payai.network';
 /** Minimum amount in USD */
 export const MIN_AMOUNT = 0.01;
 
+/** Maximum amount in USD */
+export const MAX_AMOUNT = 10000;
+
 /** USDC decimals */
 export const USDC_DECIMALS = 6;
 

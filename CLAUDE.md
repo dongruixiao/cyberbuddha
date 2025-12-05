@@ -2,118 +2,140 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-# Cyber Buddha 项目规范
+# Cyber Buddha Project Specification
 
-## 项目概述
+## Project Overview
 
-赛博佛祖 - 基于 x402 协议的链上上香许愿应用
+Cyber Buddha - A blockchain-powered wishing well built on x402 protocol.
 
-## V2 重构计划
+- **Live Site**: https://fo.hackthoughts.com/
+- **Current Branch**: v2 (TypeScript + Cloudflare Workers)
 
-### 目标
-- 部署到 Cloudflare Workers
-- TypeScript 优先
-- 代码优雅、简洁、有设计思维
+## Tech Stack
 
-### 技术栈
-- **运行时**: Cloudflare Workers
-- **语言**: TypeScript (前后端统一)
-- **后端框架**: Hono (Cloudflare Workers 友好)
-- **支付**: x402-hono 中间件
-- **前端**: 纯 TypeScript + HTML，无框架，极简极客风格
+- **Runtime**: Cloudflare Workers
+- **Language**: TypeScript (unified frontend/backend)
+- **Backend Framework**: Hono
+- **Payment Protocol**: x402 (EIP-3009 TransferWithAuthorization)
+- **Database**: Cloudflare D1 (SQLite)
+- **Frontend**: Vanilla TypeScript + HTML, PixiJS for GPU rendering
+- **Facilitator**: PayAI (https://facilitator.payai.network)
 
-### 分支策略
-- `main`: 当前 Python + FastAPI 版本
-- `v2`: TypeScript + Cloudflare Workers 重构版本
+## Architecture
 
-## 代码风格与工程要求
+```
+├── src/
+│   ├── index.ts      # Hono API routes (wish, wishes, health)
+│   ├── types.ts      # TypeScript interfaces
+│   └── config.ts     # Network config, USDC addresses
+├── public/
+│   └── index.html    # Single-page frontend with all JS inline
+├── schema.sql        # D1 database schema
+└── wrangler.toml     # Cloudflare Workers config
+```
 
-### 核心原则
-- **优雅简洁**: 代码即文档，命名清晰，逻辑直观
-- **类型安全**: 严格 TypeScript，零 any，充分利用类型推导
-- **模块化**: 单一职责，高内聚低耦合
-- **可测试**: 纯函数优先，依赖注入，便于单元测试
+## API Endpoints
 
-### 架构思维
-- 分层清晰: 路由 → 业务逻辑 → 数据/外部服务
-- 配置与代码分离
-- 错误处理统一，用户友好的错误信息
-- 日志规范，便于调试和监控
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/health` | GET | Health check |
+| `/api/wish` | GET | Get payment configuration |
+| `/api/wish` | POST | Submit wish with x402 payment |
+| `/api/wishes` | GET | Paginated wish wall (limit, offset params) |
 
-### 开发者视角
-- 以高级工程师标准审视每一行代码
-- 不仅仅是"能跑"，而是"优雅地跑"
-- 考虑边界情况、安全性、可维护性
-- 代码评审友好，PR 可读性高
+## Payment Flow
 
-## 参考资源
+1. User clicks "BLESS" → POST `/api/wish` without X-PAYMENT header
+2. Server returns 402 with payment requirements
+3. Frontend creates EIP-712 signature (TransferWithAuthorization)
+4. POST `/api/wish` with X-PAYMENT header (base64 encoded)
+5. Server verifies with facilitator, settles payment
+6. Wish saved to D1, success response returned
 
-### x402 协议
-- 官方文档: https://x402.gitbook.io/x402
-- GitHub: https://github.com/coinbase/x402
-- NPM 包: `x402-hono`, `@coinbase/x402`
+## Supported Networks
 
-### Cloudflare Workers
-- 文档: https://developers.cloudflare.com/workers/
-- TypeScript 示例: https://developers.cloudflare.com/workers/examples/?languages=TypeScript
-- Hono 框架: https://hono.dev/
+| Network | Chain ID | USDC Address |
+|---------|----------|--------------|
+| base | 8453 | 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913 |
+| base-sepolia | 84532 | 0x036CbD53842c5426634e7929541eC2318f3dCF7e |
+| polygon | 137 | 0x3c499c542cef5e3811e1192ce70d8cc03d5c3359 |
+| polygon-amoy | 80002 | 0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582 |
+| avalanche | 43114 | 0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E |
+| avalanche-fuji | 43113 | 0x5425890298aed601595a70AB815c96711a31Bc65 |
 
-### Cloudflare x402 集成
-- Cloudflare x402 文档: https://developers.cloudflare.com/agents/x402/
-- Cloudflare x402 博客: https://blog.cloudflare.com/x402/
+## Payment Tiers
 
-### Facilitator
-- **PayAI** (主网+测试网，无需认证): https://facilitator.payai.network
-- ~~x402.org~~ (不再需要，PayAI 已覆盖所有网络)
+- $1.024 → Buddha light halo effect
+- $2.048 → Sanskrit ripple effect
+- $4.096 → Lotus bloom effect
+- $8.192 → Dharma wheel + sutra background
 
-## 多链支持要求
+## Development Commands
 
-### 目标
-支持所有 PayAI Facilitator 兼容的链和代币，不限于 Base 链
+```bash
+# Install dependencies
+npm install
 
-### 支持的网络
+# Run locally
+npx wrangler dev
 
-| 网络 | 主网 | 测试网 |
-|------|------|--------|
-| Base | base | base-sepolia |
-| Polygon | polygon | polygon-amoy |
-| Avalanche | avalanche | avalanche-fuji |
-| Solana | solana | solana-devnet |
-| Sei | sei | sei-testnet |
-| IoTeX | iotex | - |
-| Peaq | peaq | - |
-| XLayer | xlayer | xlayer-testnet |
+# Deploy to Cloudflare
+npx wrangler deploy
 
-### 代币支持
-- EVM 链: 任何实现 EIP-3009 的 ERC-20 代币 (主要是 USDC)
-- Solana: 所有 SPL 代币和 Token 2022 代币
+# D1 Database commands
+npx wrangler d1 execute cyberbuddha-wishes --local --file=schema.sql  # Local
+npx wrangler d1 execute cyberbuddha-wishes --file=schema.sql          # Remote
+```
 
-### 实现要求
-- 用户可选择网络
-- 前端自动切换钱包网络
-- 后端根据配置动态支持多链
+## Code Style Guidelines
 
-## 当前状态
+### Core Principles
+- Clean, self-documenting code with clear naming
+- Strict TypeScript, no `any`
+- Modular design, single responsibility
+- Production-grade error handling and logging
 
-### V1 (main 分支)
-- [x] Python + FastAPI 后端
-- [x] x402 支付中间件
-- [x] Base 主网支持 (PayAI facilitator)
-- [x] 部署到 Render
-- [x] ASCII 佛祖前端
+### Logging Convention
+- Use structured logging with prefixes: `[WISH]`, `[WISHES]`, `[UI]`
+- Log levels: `info` for normal flow, `warn` for recoverable issues, `error` for failures
+- Include relevant context: amount, network, payer address, tx hash
 
-### V2 (待开发)
-- [ ] TypeScript 重写 (前后端统一)
-- [ ] Cloudflare Workers 部署
-- [ ] Hono + x402-hono 集成
-- [ ] 多链支持 (所有 PayAI 支持的链)
-- [ ] 用户自定义金额
-- [ ] 多语言支持 (中文 / English)
+### Security
+- XSS prevention: sanitize user content before storage
+- Amount validation: MIN_AMOUNT ($0.01) to MAX_AMOUNT ($10,000)
+- Content length limit: 200 characters
+- No secrets in client code
 
-### 未来可选功能
-- [ ] 许愿记录 (Cloudflare KV/D1)
-- [ ] 主题切换 (绿色/琥珀色/赛博粉)
-- [ ] 分享功能 (生成许愿卡片)
-- [ ] 支付成功动效 (ASCII 烟雾)
-- [ ] 移动端钱包支持 (WalletConnect)
-- [ ] 统计面板
+## Frontend Features
+
+- **Wallet Support**: MetaMask, Phantom (EVM)
+- **Network Switching**: Automatic chain switching via wallet_switchEthereumChain
+- **localStorage Persistence**: Saves network type, chain index, selected amount
+- **Visual Effects**: Canvas 2D for effects, PixiJS for GPU-accelerated background
+- **Wish Wall**: Paginated modal showing all wishes with tx links
+
+## Error Handling
+
+Backend returns consistent error format:
+```json
+{
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human-readable message"
+  }
+}
+```
+
+Error codes: `INVALID_BODY`, `INVALID_NETWORK`, `INVALID_AMOUNT`, `NOT_CONFIGURED`, `SETTLE_FAILED`, `DB_ERROR`, `PAYMENT_ERROR`
+
+Frontend maps x402 errors to user-friendly messages:
+- `insufficient_funds` → "insufficient USDC balance"
+- `invalid_signature` → "signature verification failed"
+- User rejection (code 4001) → "signature cancelled"
+
+## References
+
+- x402 Protocol: https://x402.gitbook.io/x402
+- Cloudflare Workers: https://developers.cloudflare.com/workers/
+- Hono Framework: https://hono.dev/
+- PayAI Facilitator: https://facilitator.payai.network

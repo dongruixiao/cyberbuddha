@@ -164,11 +164,32 @@ app.post('/api/wish', async (c) => {
 
     // Local validation: verify payment amount meets requirement
     const paymentValue = paymentPayload.payload?.authorization?.value;
-    if (!paymentValue || BigInt(paymentValue) < BigInt(paymentRequirements.maxAmountRequired)) {
-      console.warn(`[wish] insufficient payment: ${paymentValue} < ${paymentRequirements.maxAmountRequired}`);
+    if (!paymentValue) {
+      console.warn('[wish] missing payment value');
       return c.json({
         x402Version: 1,
-        error: 'Payment amount insufficient',
+        error: 'Payment amount missing',
+        accepts: [paymentRequirements],
+      }, 402);
+    }
+
+    // Validate paymentValue is a valid numeric string before BigInt conversion
+    try {
+      const paymentBigInt = BigInt(paymentValue);
+      const requiredBigInt = BigInt(paymentRequirements.maxAmountRequired);
+      if (paymentBigInt < requiredBigInt) {
+        console.warn(`[wish] insufficient payment: ${paymentValue} < ${paymentRequirements.maxAmountRequired}`);
+        return c.json({
+          x402Version: 1,
+          error: 'Payment amount insufficient',
+          accepts: [paymentRequirements],
+        }, 402);
+      }
+    } catch {
+      console.warn(`[wish] invalid payment value format: ${paymentValue}`);
+      return c.json({
+        x402Version: 1,
+        error: 'Invalid payment value format',
         accepts: [paymentRequirements],
       }, 402);
     }

@@ -58,7 +58,12 @@ function setupWalletListeners(provider: NonNullable<Window['ethereum']>): void {
     if (!accs[0]) setState('walletType', null);
     updateUI();
   });
-  provider.on('chainChanged', () => location.reload());
+  provider.on('chainChanged', (chainId: unknown) => {
+    if (typeof chainId === 'string') {
+      setState('chainId', parseInt(chainId, 16));
+      updateUI();
+    }
+  });
 }
 
 export function disconnectWallet(): void {

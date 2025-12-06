@@ -3,6 +3,16 @@ import { dom } from '../core/dom';
 import { DEFAULT_WISH_PLACEHOLDER } from '../../../shared/types';
 import { loadWishes, formatAddr, formatTime, getTxUrl, WishRecord } from './service';
 
+// Escape HTML to prevent XSS
+function escapeHtml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 interface WishWallState {
   page: number;
   total: number;
@@ -27,7 +37,7 @@ function renderWishes(wishes: WishRecord[]): void {
           <span class="wish-item-network">${w.network}</span>
         </div>
       </div>
-      <div class="wish-item-content">${w.content || DEFAULT_WISH_PLACEHOLDER}</div>
+      <div class="wish-item-content">${escapeHtml(w.content || DEFAULT_WISH_PLACEHOLDER)}</div>
       <div class="wish-item-footer">
         <span>${formatTime(w.created_at)}</span>
         ${w.tx_hash ? `<a class="wish-item-tx" href="${getTxUrl(w.network, w.tx_hash)}" target="_blank" rel="noopener">[tx]</a>` : ''}

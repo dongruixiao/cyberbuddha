@@ -95,3 +95,40 @@
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn.gold { border-color: var(--gold); color: var(--gold); }
 .btn.gold:hover { background: rgba(255, 170, 0, 0.1); box-shadow: 0 0 15px rgba(255, 170, 0, 0.3); }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .wish-input {
+    width: 100%;
+    max-width: 320px;
+    font-size: var(--font-md);
+  }
+
+  .amount-select {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .amount-opt {
+    padding: 10px 14px;
+    font-size: var(--font-sm);
+    /* Larger touch targets */
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ascii-btn {
+    font-size: var(--font-md);
+    padding: 12px 20px;
+    min-height: 48px;
+  }
+
+  .terminal {
+    width: 100%;
+    max-width: 360px;
+    margin: 0 auto;
+    margin-top: 12px;
+  }
+}

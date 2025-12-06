@@ -6,6 +6,12 @@ import { makeWish } from './service';
 import { triggerEffect } from '../effects/trigger';
 import { startCoinFlip } from '../effects/background';
 import { getChains } from '../wallet/ui';
+import { BLOCK_EXPLORERS } from '../core/constants';
+
+// Update button text with current amount
+function updateButtonText(amount: number): void {
+  dom.action.textContent = `:: KARMA +1 ($${amount}) ::`;
+}
 
 // Debounce timer for typing effect
 let typingTimer: number | null = null;
@@ -43,9 +49,14 @@ export function initWishUI(): void {
     if (!opt) return;
     dom.amountSelect.querySelectorAll('.amount-opt').forEach(el => el.classList.remove('selected'));
     opt.classList.add('selected');
-    setState('selectedAmount', parseFloat((opt as HTMLElement).dataset.amount!));
+    const newAmount = parseFloat((opt as HTMLElement).dataset.amount!);
+    setState('selectedAmount', newAmount);
+    updateButtonText(newAmount);
     savePreferences();
   });
+
+  // Initialize button text with current amount
+  updateButtonText(getState('selectedAmount'));
 
   // Make wish on action button click
   dom.action.addEventListener('click', async () => {
@@ -58,13 +69,33 @@ export function initWishUI(): void {
       return;
     }
 
+    const network = getChains()[chainIndex];
+
     try {
       dom.action.disabled = true;
+      dom.action.textContent = ':: signing... ::';
       addMessage(`preparing $${amount} karma...`);
-      const network = getChains()[chainIndex];
+
+      // Prompt user to check wallet
+      setTimeout(() => {
+        if (dom.action.disabled) {
+          addMessage('check your wallet to sign the transaction...', '');
+        }
+      }, 1500);
+
       const result = await makeWish(amount, dom.wish.value || undefined, network);
       console.log('[wish] payment success, triggering effect:', amount, result);
-      addMessage(result.message, 'success');
+
+      // Show success with TX hash link
+      if (result.txHash) {
+        const explorer = BLOCK_EXPLORERS[network] || '';
+        const shortHash = result.txHash.slice(0, 10) + '...';
+        addMessage(`${result.message} tx: ${shortHash}`, 'success');
+        // Log full link for users who want to verify
+        console.log(`[wish] explorer: ${explorer}${result.txHash}`);
+      } else {
+        addMessage(result.message, 'success');
+      }
 
       // Show warning if DB save failed
       if (result.warning) {
@@ -78,6 +109,9 @@ export function initWishUI(): void {
       console.error('[wish] payment error:', e);
       addMessage((e as Error).message, 'error');
     }
-    finally { dom.action.disabled = false; }
+    finally {
+      dom.action.disabled = false;
+      updateButtonText(amount);
+    }
   });
 }

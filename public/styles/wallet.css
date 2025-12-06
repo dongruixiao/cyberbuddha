@@ -198,3 +198,41 @@
   color: #bb88ff;
   text-shadow: 0 0 6px rgba(187, 136, 255, 0.5);
 }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .chain-switcher {
+    font-size: var(--font-sm);
+  }
+
+  .chain-arrow {
+    padding: 8px;
+    /* Larger touch target */
+    min-width: 32px;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .wallet-status {
+    font-size: var(--font-sm);
+  }
+
+  .wallet-modal-content {
+    width: calc(100vw - 32px);
+    max-width: 320px;
+    padding: 20px 16px;
+  }
+
+  .wallet-option {
+    padding: 14px 16px;
+    /* Larger touch target */
+    min-height: 48px;
+  }
+
+  .network-opt {
+    padding: 8px 16px;
+    min-height: 40px;
+  }
+}

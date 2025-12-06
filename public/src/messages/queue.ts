@@ -2,7 +2,7 @@
 import { dom } from '../core/dom';
 
 const MSG_MAX = 5;
-const MSG_LIFETIME = 6000; // ms
+const MSG_LIFETIME = 12000; // ms - extended for better readability
 
 interface Message {
   text: string;

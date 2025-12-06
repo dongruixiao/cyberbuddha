@@ -1,11 +1,19 @@
 // Wallet connection management
 import { setState, resetWalletState, type WalletType } from '../core/state';
-import { getProvider } from './provider';
+import { getProvider, isMobile, isInWalletBrowser, openWalletApp } from './provider';
 import { updateUI } from './ui';
 
 export async function connectWallet(walletType: WalletType): Promise<void> {
   const provider = getProvider(walletType);
-  if (!provider) throw new Error(`${walletType} not installed`);
+
+  // On mobile without provider, open wallet app via deep link
+  if (!provider) {
+    if (isMobile() && !isInWalletBrowser()) {
+      openWalletApp(walletType);
+      return; // Page will redirect to wallet app
+    }
+    throw new Error(`${walletType} not installed`);
+  }
 
   const accounts = await provider.request({ method: 'eth_requestAccounts' }) as string[];
   setState('address', accounts[0]);
